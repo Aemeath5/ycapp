@@ -1,0 +1,183 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      abi:
+        description: Android CPU architecture
+        required: true
+        default: arm64-v8a
+        type: choice
+        options:
+          - arm64-v8a
+          - armeabi-v7a
+          - x86_64
+          - x86
+
+permissions:
+  contents: read
+
+env:
+  BRIDGE_FLUTTER_VERSION: 3.22.3
+  ANDROID_FLUTTER_VERSION: 3.24.5
+  RUST_VERSION: "1.75"
+  NDK_VERSION: r28c
+  VCPKG_COMMIT_ID: 120deac3062162151622ca4860575a33844ba10b
+  VCPKG_ROOT: ${{ github.workspace }}/.vcpkg
+
+jobs:
+  generate-bridge:
+    name: Generate Flutter-Rust bridge
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install bridge packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            curl \
+            g++ \
+            gcc \
+            libclang-dev \
+            libgtk-3-dev \
+            llvm-dev \
+            nasm \
+            ninja-build \
+            pkg-config
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt
+
+      - name: Cache Rust bridge tools
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: rustdesk-android-bridge
+
+      - name: Set up bridge Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.BRIDGE_FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install bridge tools
+        run: |
+          cargo install cargo-expand --version 1.0.95 --locked
+          cargo install flutter_rust_bridge_codegen \
+            --version 1.80.1 \
+            --features uuid \
+            --locked
+
+      - name: Generate bridge
+        run: ./scripts/generate-bridge.sh
+
+      - name: Upload bridge
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-rust-bridge
+          path: |
+            src/bridge_generated.rs
+            src/bridge_generated.io.rs
+            flutter/lib/generated_bridge.dart
+            flutter/lib/generated_bridge.freezed.dart
+          if-no-files-found: error
+
+  build:
+    name: APK (${{ inputs.abi }})
+    needs: generate-bridge
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Android build packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            clang \
+            cmake \
+            curl \
+            g++ \
+            gcc \
+            libclang-dev \
+            libtool \
+            nasm \
+            ninja-build \
+            perl \
+            pkg-config
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.ANDROID_FLUTTER_VERSION }}
+          cache: true
+
+      - name: Patch Flutter 3.24 dropdown behavior
+        run: ./scripts/patch-flutter.sh
+
+      - name: Set up Android NDK
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: ${{ env.NDK_VERSION }}
+          add-to-path: true
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: rustdesk-android-standalone
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --version 3.1.2 --locked
+
+      - name: Set up vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: ${{ env.VCPKG_ROOT }}
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          runVcpkgInstall: false
+
+      - name: Download bridge
+        uses: actions/download-artifact@v4
+        with:
+          name: flutter-rust-bridge
+          path: .
+
+      - name: Build APK
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: ./scripts/build-android.sh "${{ inputs.abi }}"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: rustdesk-hyperos-${{ inputs.abi }}
+          path: dist/*.apk
+          if-no-files-found: error
