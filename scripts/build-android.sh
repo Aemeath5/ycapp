@@ -99,6 +99,7 @@ rustup target add "${RUST_TARGET}"
 cargo ndk \
   --platform 21 \
   --target "${RUST_TARGET}" \
+  --bindgen \
   build \
   --release \
   --lib \
