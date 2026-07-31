@@ -8,12 +8,12 @@ import 'package:flutter/services.dart';
 class HyperosTheme {
   HyperosTheme._();
 
-  static const Color accent = Color(0xFF0D84FF);
+  static const Color accent = Color(0xFF3482FF);
 
   static const Color lightBackground = Color(0xFFF4F5F7);
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightSurfaceMuted = Color(0xFFF0F2F6);
-  static const Color lightAccentSurface = Color(0xFFE8F3FF);
+  static const Color lightAccentSurface = Color(0xFFEBF3FF);
   static const Color lightText = Color(0xFF17181A);
   static const Color lightSecondaryText = Color(0xFF7C7F86);
   static const Color lightBorder = Color(0x0D000000);
@@ -27,26 +27,26 @@ class HyperosTheme {
   static const Color darkBorder = Color(0x14FFFFFF);
 
   static ThemeData light(ThemeData base) => _build(
-    base: base,
-    brightness: Brightness.light,
-    background: lightBackground,
-    surface: lightSurface,
-    surfaceMuted: lightSurfaceMuted,
-    text: lightText,
-    secondaryText: lightSecondaryText,
-    border: lightBorder,
-  );
+        base: base,
+        brightness: Brightness.light,
+        background: lightBackground,
+        surface: lightSurface,
+        surfaceMuted: lightSurfaceMuted,
+        text: lightText,
+        secondaryText: lightSecondaryText,
+        border: lightBorder,
+      );
 
   static ThemeData dark(ThemeData base) => _build(
-    base: base,
-    brightness: Brightness.dark,
-    background: darkBackground,
-    surface: darkSurface,
-    surfaceMuted: darkSurfaceMuted,
-    text: darkText,
-    secondaryText: darkSecondaryText,
-    border: darkBorder,
-  );
+        base: base,
+        brightness: Brightness.dark,
+        background: darkBackground,
+        surface: darkSurface,
+        surfaceMuted: darkSurfaceMuted,
+        text: darkText,
+        secondaryText: darkSecondaryText,
+        border: darkBorder,
+      );
 
   static ThemeData _build({
     required ThemeData base,
@@ -98,8 +98,7 @@ class HyperosTheme {
         surfaceTintColor: Colors.transparent,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness:
-              isDark ? Brightness.light : Brightness.dark,
+          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
           statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
           systemNavigationBarColor: background,
           systemNavigationBarDividerColor: Colors.transparent,
@@ -300,10 +299,10 @@ class HyperosTheme {
       isDark(context) ? darkBorder : lightBorder;
 
   static List<BoxShadow> shadow(BuildContext context) => [
-    BoxShadow(
-      color: Colors.black.withOpacity(isDark(context) ? 0.24 : 0.10),
-      blurRadius: 28,
-      offset: const Offset(0, 10),
-    ),
-  ];
+        BoxShadow(
+          color: Colors.black.withOpacity(isDark(context) ? 0.20 : 0.08),
+          blurRadius: 20,
+          offset: const Offset(0, 7),
+        ),
+      ];
 }

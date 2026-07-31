@@ -19,6 +19,7 @@ import '../../models/model.dart';
 import '../../models/platform_model.dart';
 import '../hyperos_theme.dart';
 import '../widgets/dialog.dart';
+import '../widgets/miuix_widgets.dart';
 import 'home_page.dart';
 import 'scan_page.dart';
 
@@ -39,6 +40,76 @@ class SettingsPage extends StatefulWidget implements PageShape {
 const url = 'https://rustdesk.com/';
 
 enum KeepScreenOn { never, duringControlled, serviceOn }
+
+AbstractSettingsSection _buildMiuiSettingsSection(
+  AbstractSettingsSection section,
+) {
+  if (section is! SettingsSection) {
+    return section;
+  }
+
+  return CustomSettingsSection(
+    child: Builder(
+      builder: (context) {
+        final tiles = section.tiles.map((abstractTile) {
+          if (abstractTile is! SettingsTile) {
+            return abstractTile;
+          }
+
+          final tile = abstractTile;
+          final isSwitch = tile.initialValue != null;
+          final onPressed =
+              tile.onPressed == null ? null : () => tile.onPressed!(context);
+          final onToggle = tile.onToggle == null
+              ? null
+              : (bool value) => tile.onToggle!(value);
+
+          return MiuiPreferenceTile(
+            leading: tile.leading,
+            title: tile.title,
+            subtitle: tile.description,
+            value: tile.value,
+            trailing: isSwitch ? null : tile.trailing,
+            switchValue: tile.initialValue,
+            onToggle: onToggle,
+            onTap: onPressed,
+            enabled: tile.enabled,
+            showChevron:
+                !isSwitch && tile.trailing == null && tile.onPressed != null,
+          );
+        }).toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (section.title != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+                child: DefaultTextStyle(
+                  style: TextStyle(
+                    color: HyperosTheme.secondaryText(context),
+                    fontSize: 13,
+                    height: 1.2,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  child: section.title!,
+                ),
+              ),
+            MiuiSectionCard(
+              margin: EdgeInsets.fromLTRB(
+                12,
+                section.title == null ? 12 : 0,
+                12,
+                0,
+              ),
+              child: Column(children: tiles),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
 
 String _keepScreenOnToOption(KeepScreenOn value) {
   switch (value) {
@@ -150,7 +221,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
         bind.mainGetBuildinOption(key: kOptionHideNetworkSetting) == 'Y';
     _hideWebSocket =
         bind.mainGetBuildinOption(key: kOptionHideWebSocketSetting) == 'Y' ||
-        isWeb;
+            isWeb;
     _enableTrustedDevices = mainGetBoolOptionSync(kOptionEnableTrustedDevices);
     _enableUdpPunch = mainGetLocalBoolOptionSync(kOptionEnableUdpPunch);
     _enableIpv6Punch = mainGetLocalBoolOptionSync(kOptionEnableIpv6Punch);
@@ -209,7 +280,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
 
       var floatingWindowDisabled =
           bind.mainGetLocalOption(key: kOptionDisableFloatingWindow) == "Y" ||
-          !await AndroidPermissionManager.check(kSystemAlertWindow);
+              !await AndroidPermissionManager.check(kSystemAlertWindow);
       if (floatingWindowDisabled != _floatingWindowDisabled) {
         update = true;
         _floatingWindowDisabled = floatingWindowDisabled;
@@ -327,20 +398,22 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
                           bind.mainGetAppNameSync(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                         const SizedBox(height: 5),
                         Text(
                           '${translate("Version: ")}$version',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: HyperosTheme.secondaryText(context),
-                            fontSize: 13,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: HyperosTheme.secondaryText(context),
+                                    fontSize: 13,
+                                  ),
                         ),
                       ],
                     ),
@@ -810,15 +883,15 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
         ),
         asyncSetter:
             isOptionFixed(kOptionKeepScreenOn) || _floatingWindowDisabled
-            ? null
-            : (value) async {
-                await bind.mainSetLocalOption(
-                  key: kOptionKeepScreenOn,
-                  value: value,
-                );
-                setState(() => _keepScreenOn = optionToKeepScreenOn(value));
-                gFFI.serverModel.androidUpdatekeepScreenOn();
-              },
+                ? null
+                : (value) async {
+                    await bind.mainSetLocalOption(
+                      key: kOptionKeepScreenOn,
+                      value: value,
+                    );
+                    setState(() => _keepScreenOn = optionToKeepScreenOn(value));
+                    gFFI.serverModel.androidUpdatekeepScreenOn();
+                  },
       ),
     );
 
@@ -1173,12 +1246,12 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
       ),
     ];
     final settings = SettingsList(
-      contentPadding: const EdgeInsets.only(bottom: 24),
+      contentPadding: const EdgeInsets.only(bottom: 40),
       lightTheme: const SettingsThemeData(
         settingsListBackground: HyperosTheme.lightBackground,
         settingsSectionBackground: Colors.transparent,
         dividerColor: Colors.transparent,
-        tileHighlightColor: Color(0x140D84FF),
+        tileHighlightColor: Color(0x143482FF),
         titleTextColor: HyperosTheme.accent,
         leadingIconsColor: HyperosTheme.accent,
         trailingTextColor: HyperosTheme.lightSecondaryText,
@@ -1191,7 +1264,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
         settingsListBackground: HyperosTheme.darkBackground,
         settingsSectionBackground: Colors.transparent,
         dividerColor: Colors.transparent,
-        tileHighlightColor: Color(0x220D84FF),
+        tileHighlightColor: Color(0x223482FF),
         titleTextColor: HyperosTheme.accent,
         leadingIconsColor: HyperosTheme.accent,
         trailingTextColor: HyperosTheme.darkSecondaryText,
@@ -1200,55 +1273,9 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
         inactiveTitleColor: Color(0x66F4F4F6),
         inactiveSubtitleColor: Color(0x55A5A7AD),
       ),
-      sections: sections.map(_buildHyperosSettingsSection).toList(),
+      sections: sections.map(_buildMiuiSettingsSection).toList(),
     );
     return settings;
-  }
-
-  AbstractSettingsSection _buildHyperosSettingsSection(
-    AbstractSettingsSection section,
-  ) {
-    if (section is! SettingsSection) {
-      return section;
-    }
-
-    return CustomSettingsSection(
-      child: Builder(
-        builder: (context) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (section.title != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-                  child: DefaultTextStyle(
-                    style: TextStyle(
-                      color: HyperosTheme.secondaryText(context),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    child: section.title!,
-                  ),
-                ),
-              Container(
-                margin: EdgeInsets.fromLTRB(
-                  12,
-                  section.title == null ? 12 : 0,
-                  12,
-                  8,
-                ),
-                decoration: BoxDecoration(
-                  color: HyperosTheme.surface(context),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: SettingsSection(tiles: section.tiles),
-              ),
-            ],
-          );
-        },
-      ),
-    );
   }
 
   Future<bool> canStartOnBoot() async {
@@ -1306,8 +1333,7 @@ void showLanguageSettings(OverlayDialogManager dialogManager) async {
         final isOptFixed = isOptionFixed(kCommConfKeyLang);
         return CustomAlertDialog(
           content: Column(
-            children:
-                [
+            children: [
                   getRadio(
                     Text(translate('Default')),
                     defaultOptionLang,
@@ -1419,26 +1445,34 @@ void showAbout(OverlayDialogManager dialogManager) {
 class ScanButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: HyperosTheme.surfaceMuted(context),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: IconButton(
-        icon: const Icon(
-          Icons.qr_code_scanner_rounded,
-          color: HyperosTheme.accent,
-          size: 21,
+    return Padding(
+      padding: const EdgeInsets.only(right: 16),
+      child: Center(
+        child: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: HyperosTheme.surfaceMuted(context),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: IconButton(
+            padding: EdgeInsets.zero,
+            icon: const Icon(
+              Icons.qr_code_scanner_rounded,
+              color: HyperosTheme.accent,
+              size: 21,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (BuildContext context) => ScanPage(),
+                ),
+              );
+            },
+          ),
         ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (BuildContext context) => ScanPage()),
-          );
-        },
       ),
     );
   }
@@ -1470,13 +1504,24 @@ class __DisplayPageState extends State<_DisplayPage> {
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: Icon(Icons.arrow_back_ios),
+          icon: Icon(Icons.arrow_back_ios_new_rounded),
         ),
         title: Text(translate('Display Settings')),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: SettingsList(
-        sections: [
+        contentPadding: const EdgeInsets.only(bottom: 32),
+        lightTheme: const SettingsThemeData(
+          settingsListBackground: HyperosTheme.lightBackground,
+          settingsSectionBackground: Colors.transparent,
+          dividerColor: Colors.transparent,
+        ),
+        darkTheme: const SettingsThemeData(
+          settingsListBackground: HyperosTheme.darkBackground,
+          settingsSectionBackground: Colors.transparent,
+          dividerColor: Colors.transparent,
+        ),
+        sections: <AbstractSettingsSection>[
           SettingsSection(
             tiles: [
               _getPopupDialogRadioEntry(
@@ -1547,7 +1592,7 @@ class __DisplayPageState extends State<_DisplayPage> {
                 .map((e) => otherRow(e.$1, e.$2))
                 .toList(),
           ),
-        ],
+        ].map(_buildMiuiSettingsSection).toList(),
       ),
     );
   }
@@ -1682,10 +1727,9 @@ SettingsTile _getPopupDialogRadioEntry({
                     )
                     .toList(),
                 Offstage(
-                  offstage:
-                      !(tail != null &&
-                          showTail != null &&
-                          showTail.value == true),
+                  offstage: !(tail != null &&
+                      showTail != null &&
+                      showTail.value == true),
                   child: tail,
                 ),
               ],

@@ -24,7 +24,7 @@ class ConnectionPage extends StatefulWidget implements PageShape {
   ConnectionPage({Key? key, required this.appBarActions}) : super(key: key);
 
   @override
-  final icon = const Icon(Icons.connected_tv);
+  final icon = const Icon(Icons.desktop_windows_rounded);
 
   @override
   final title = translate("Connection");
@@ -144,10 +144,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
     return updateUrl.isEmpty
         ? const SizedBox(height: 0)
         : Container(
-            margin: const EdgeInsets.only(bottom: 10),
+            margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
               color: HyperosTheme.accentSurface(context),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
             ),
             clipBehavior: Clip.antiAlias,
             child: Material(
@@ -158,31 +158,31 @@ class _ConnectionPageState extends State<ConnectionPage> {
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+                    horizontal: 14,
+                    vertical: 9,
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: 38,
-                        height: 38,
+                        width: 36,
+                        height: 36,
                         decoration: BoxDecoration(
                           color: HyperosTheme.accent.withOpacity(0.14),
-                          borderRadius: BorderRadius.circular(13),
+                          borderRadius: BorderRadius.circular(11),
                         ),
                         child: const Icon(
                           Icons.system_update_alt_rounded,
                           color: HyperosTheme.accent,
-                          size: 21,
+                          size: 20,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 11),
                       Expanded(
                         child: Text(
                           translate('Download new version'),
                           style: Theme.of(
                             context,
-                          ).textTheme.titleMedium?.copyWith(fontSize: 15),
+                          ).textTheme.titleMedium?.copyWith(fontSize: 14),
                         ),
                       ),
                       Icon(
@@ -202,8 +202,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
   /// Search for a peer and connect to it if the id exists.
   Widget _buildRemoteIDTextField() {
     final w = Container(
-      margin: const EdgeInsets.only(top: 8, bottom: 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(top: 6, bottom: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: HyperosTheme.surface(context),
         borderRadius: BorderRadius.circular(16),
@@ -214,19 +214,19 @@ class _ConnectionPageState extends State<ConnectionPage> {
           Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   color: HyperosTheme.accentSurface(context),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(13),
                 ),
                 child: const Icon(
                   Icons.devices_rounded,
                   color: HyperosTheme.accent,
-                  size: 25,
+                  size: 23,
                 ),
               ),
-              const SizedBox(width: 13),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,9 +236,9 @@ class _ConnectionPageState extends State<ConnectionPage> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w700,
-                      ),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -246,18 +246,18 @@ class _ConnectionPageState extends State<ConnectionPage> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: HyperosTheme.secondaryText(context),
-                        fontSize: 13,
-                      ),
+                            color: HyperosTheme.secondaryText(context),
+                            fontSize: 13,
+                          ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.fromLTRB(14, 4, 6, 4),
+            padding: const EdgeInsets.fromLTRB(13, 3, 5, 3),
             decoration: BoxDecoration(
               color: HyperosTheme.surfaceMuted(context),
               borderRadius: BorderRadius.circular(12),
@@ -266,61 +266,61 @@ class _ConnectionPageState extends State<ConnectionPage> {
               children: <Widget>[
                 Expanded(
                   child: RawAutocomplete<Peer>(
-                optionsBuilder: (TextEditingValue textEditingValue) {
-                  if (textEditingValue.text == '') {
-                    _autocompleteOpts = const Iterable<Peer>.empty();
-                  } else if (_allPeersLoader.peers.isEmpty &&
-                      !_allPeersLoader.isPeersLoaded) {
-                    Peer emptyPeer = Peer(
-                      id: '',
-                      username: '',
-                      hostname: '',
-                      alias: '',
-                      platform: '',
-                      tags: [],
-                      hash: '',
-                      password: '',
-                      forceAlwaysRelay: false,
-                      rdpPort: '',
-                      rdpUsername: '',
-                      loginName: '',
-                      device_group_name: '',
-                      note: '',
-                    );
-                    _autocompleteOpts = [emptyPeer];
-                  } else {
-                    String textWithoutSpaces = textEditingValue.text.replaceAll(
-                      " ",
-                      "",
-                    );
-                    if (int.tryParse(textWithoutSpaces) != null) {
-                      textEditingValue = TextEditingValue(
-                        text: textWithoutSpaces,
-                        selection: textEditingValue.selection,
-                      );
-                    }
-                    String textToFind = textEditingValue.text.toLowerCase();
+                    optionsBuilder: (TextEditingValue textEditingValue) {
+                      if (textEditingValue.text == '') {
+                        _autocompleteOpts = const Iterable<Peer>.empty();
+                      } else if (_allPeersLoader.peers.isEmpty &&
+                          !_allPeersLoader.isPeersLoaded) {
+                        Peer emptyPeer = Peer(
+                          id: '',
+                          username: '',
+                          hostname: '',
+                          alias: '',
+                          platform: '',
+                          tags: [],
+                          hash: '',
+                          password: '',
+                          forceAlwaysRelay: false,
+                          rdpPort: '',
+                          rdpUsername: '',
+                          loginName: '',
+                          device_group_name: '',
+                          note: '',
+                        );
+                        _autocompleteOpts = [emptyPeer];
+                      } else {
+                        String textWithoutSpaces =
+                            textEditingValue.text.replaceAll(
+                          " ",
+                          "",
+                        );
+                        if (int.tryParse(textWithoutSpaces) != null) {
+                          textEditingValue = TextEditingValue(
+                            text: textWithoutSpaces,
+                            selection: textEditingValue.selection,
+                          );
+                        }
+                        String textToFind = textEditingValue.text.toLowerCase();
 
-                    _autocompleteOpts = _allPeersLoader.peers
-                        .where(
-                          (peer) =>
-                              peer.id.toLowerCase().contains(textToFind) ||
-                              peer.username.toLowerCase().contains(
-                                textToFind,
-                              ) ||
-                              peer.hostname.toLowerCase().contains(
-                                textToFind,
-                              ) ||
-                              peer.alias.toLowerCase().contains(textToFind),
-                        )
-                        .toList();
-                  }
-                  return _autocompleteOpts;
-                },
-                focusNode: _idFocusNode,
-                textEditingController: _idEditingController,
-                fieldViewBuilder:
-                    (
+                        _autocompleteOpts = _allPeersLoader.peers
+                            .where(
+                              (peer) =>
+                                  peer.id.toLowerCase().contains(textToFind) ||
+                                  peer.username.toLowerCase().contains(
+                                        textToFind,
+                                      ) ||
+                                  peer.hostname.toLowerCase().contains(
+                                        textToFind,
+                                      ) ||
+                                  peer.alias.toLowerCase().contains(textToFind),
+                            )
+                            .toList();
+                      }
+                      return _autocompleteOpts;
+                    },
+                    focusNode: _idFocusNode,
+                    textEditingController: _idEditingController,
+                    fieldViewBuilder: (
                       BuildContext context,
                       TextEditingController fieldTextEditingController,
                       FocusNode fieldFocusNode,
@@ -349,6 +349,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
                         ),
                         decoration: InputDecoration(
                           labelText: translate('Remote ID'),
+                          hintText: translate('Enter Remote ID'),
+                          floatingLabelBehavior: FloatingLabelBehavior.always,
                           filled: false,
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
@@ -364,6 +366,13 @@ class _ConnectionPageState extends State<ConnectionPage> {
                             letterSpacing: 0.2,
                             color: HyperosTheme.secondaryText(context),
                           ),
+                          hintStyle: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 17,
+                            color: HyperosTheme.secondaryText(
+                              context,
+                            ).withOpacity(0.58),
+                          ),
                         ),
                         inputFormatters: [IDTextInputFormatter()],
                         onSubmitted: (_) {
@@ -371,14 +380,13 @@ class _ConnectionPageState extends State<ConnectionPage> {
                         },
                       );
                     },
-                onSelected: (option) {
-                  setState(() {
-                    _idController.id = option.id;
-                    FocusScope.of(context).unfocus();
-                  });
-                },
-                optionsViewBuilder:
-                    (
+                    onSelected: (option) {
+                      setState(() {
+                        _idController.id = option.id;
+                        FocusScope.of(context).unfocus();
+                      });
+                    },
+                    optionsViewBuilder: (
                       BuildContext context,
                       AutocompleteOnSelected<Peer> onSelected,
                       Iterable<Peer> options,
@@ -414,8 +422,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                                   maxHeight: maxHeight,
                                   maxWidth: 320,
                                 ),
-                                child:
-                                    _allPeersLoader.peers.isEmpty &&
+                                child: _allPeersLoader.peers.isEmpty &&
                                         !_allPeersLoader.isPeersLoaded
                                     ? Container(
                                         height: 80,
@@ -462,18 +469,18 @@ class _ConnectionPageState extends State<ConnectionPage> {
                   ),
                 ),
                 SizedBox(
-                  width: 56,
-                  height: 56,
+                  width: 52,
+                  height: 52,
                   child: Container(
                     decoration: BoxDecoration(
                       color: HyperosTheme.accent,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(13),
                     ),
                     child: IconButton(
                       icon: const Icon(
                         Icons.arrow_forward_rounded,
                         color: Colors.white,
-                        size: 29,
+                        size: 27,
                       ),
                       onPressed: onConnect,
                     ),
