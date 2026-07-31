@@ -8,19 +8,20 @@ import 'package:flutter/services.dart';
 class HyperosTheme {
   HyperosTheme._();
 
-  static const Color accent = Color(0xFF3482FF);
+  // HyperCeiler uses MIUIX's HyperOS blue (#0D84FF) for interactive states.
+  static const Color accent = Color(0xFF0D84FF);
 
   static const Color lightBackground = Color(0xFFF4F5F7);
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightSurfaceMuted = Color(0xFFF0F2F6);
-  static const Color lightAccentSurface = Color(0xFFEBF3FF);
+  static const Color lightSurfaceMuted = Color(0xFFF1F2F6);
+  static const Color lightAccentSurface = Color(0xFFE9F3FF);
   static const Color lightText = Color(0xFF17181A);
-  static const Color lightSecondaryText = Color(0xFF7C7F86);
+  static const Color lightSecondaryText = Color(0xFF898C93);
   static const Color lightBorder = Color(0x0D000000);
 
-  static const Color darkBackground = Color(0xFF0F1012);
-  static const Color darkSurface = Color(0xFF1B1C1F);
-  static const Color darkSurfaceMuted = Color(0xFF25272C);
+  static const Color darkBackground = Color(0xFF000000);
+  static const Color darkSurface = Color(0xFF1C1C1E);
+  static const Color darkSurfaceMuted = Color(0xFF2C2C2E);
   static const Color darkAccentSurface = Color(0xFF182D43);
   static const Color darkText = Color(0xFFF4F4F6);
   static const Color darkSecondaryText = Color(0xFFA5A7AD);
@@ -298,11 +299,24 @@ class HyperosTheme {
   static Color border(BuildContext context) =>
       isDark(context) ? darkBorder : lightBorder;
 
+  /// Flutter's closest equivalent to MIUIX SpringBackLayout.
+  static const ScrollPhysics springPhysics = BouncingScrollPhysics(
+    parent: AlwaysScrollableScrollPhysics(),
+  );
+
   static List<BoxShadow> shadow(BuildContext context) => [
         BoxShadow(
           color: Colors.black.withOpacity(isDark(context) ? 0.20 : 0.08),
           blurRadius: 20,
           offset: const Offset(0, 7),
+        ),
+      ];
+
+  static List<BoxShadow> capsuleShadow(BuildContext context) => [
+        BoxShadow(
+          color: Colors.black.withOpacity(isDark(context) ? 0.34 : 0.12),
+          blurRadius: 40,
+          offset: const Offset(1, 12),
         ),
       ];
 }

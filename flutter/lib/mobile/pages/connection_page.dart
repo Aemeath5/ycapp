@@ -84,9 +84,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
     return ColoredBox(
       color: HyperosTheme.background(context),
       child: CustomScrollView(
+        physics: HyperosTheme.springPhysics,
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 2, 16, 0),
+            padding: const EdgeInsets.fromLTRB(12, 2, 12, 0),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 if (!bind.isCustomClient() && !isIOS)
@@ -96,7 +97,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             sliver: SliverFillRemaining(
               hasScrollBody: true,
               child: Container(

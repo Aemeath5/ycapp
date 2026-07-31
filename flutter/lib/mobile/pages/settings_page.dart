@@ -371,7 +371,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
     final incomingOnly = bind.isIncomingOnly();
     final customClientSection = CustomSettingsSection(
       child: Container(
-        margin: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+        margin: const EdgeInsets.fromLTRB(12, 4, 12, 6),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         decoration: BoxDecoration(
           color: HyperosTheme.surface(context),
@@ -1246,12 +1246,13 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
       ),
     ];
     final settings = SettingsList(
-      contentPadding: const EdgeInsets.only(bottom: 40),
+      physics: HyperosTheme.springPhysics,
+      contentPadding: const EdgeInsets.only(bottom: 28),
       lightTheme: const SettingsThemeData(
         settingsListBackground: HyperosTheme.lightBackground,
         settingsSectionBackground: Colors.transparent,
         dividerColor: Colors.transparent,
-        tileHighlightColor: Color(0x143482FF),
+        tileHighlightColor: Color(0x140D84FF),
         titleTextColor: HyperosTheme.accent,
         leadingIconsColor: HyperosTheme.accent,
         trailingTextColor: HyperosTheme.lightSecondaryText,
@@ -1264,7 +1265,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
         settingsListBackground: HyperosTheme.darkBackground,
         settingsSectionBackground: Colors.transparent,
         dividerColor: Colors.transparent,
-        tileHighlightColor: Color(0x223482FF),
+        tileHighlightColor: Color(0x220D84FF),
         titleTextColor: HyperosTheme.accent,
         leadingIconsColor: HyperosTheme.accent,
         trailingTextColor: HyperosTheme.darkSecondaryText,
@@ -1510,6 +1511,7 @@ class __DisplayPageState extends State<_DisplayPage> {
         centerTitle: false,
       ),
       body: SettingsList(
+        physics: HyperosTheme.springPhysics,
         contentPadding: const EdgeInsets.only(bottom: 32),
         lightTheme: const SettingsThemeData(
           settingsListBackground: HyperosTheme.lightBackground,
