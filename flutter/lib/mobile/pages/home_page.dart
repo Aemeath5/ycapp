@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/mobile/pages/server_page.dart';
 import 'package:flutter_hbb/mobile/pages/settings_page.dart';
@@ -72,47 +74,76 @@ class HomePageState extends State<HomePage> {
       child: Scaffold(
         backgroundColor: HyperosTheme.background(context),
         appBar: AppBar(
-          toolbarHeight: isChatPageCurrentTab ? 64 : 82,
+          toolbarHeight: isChatPageCurrentTab ? 64 : 88,
           centerTitle: isChatPageCurrentTab,
-          titleSpacing: 20,
+          titleSpacing: isChatPageCurrentTab ? 16 : 24,
           title: appTitle(),
           actions: _pages.elementAt(_selectedIndex).appBarActions,
         ),
         bottomNavigationBar: SafeArea(
           top: false,
-          minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: Container(
-            decoration: BoxDecoration(
-              color: HyperosTheme.surface(context),
-              borderRadius: BorderRadius.circular(26),
-              border: Border.all(color: HyperosTheme.border(context)),
-              boxShadow: HyperosTheme.shadow(context),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: BottomNavigationBar(
-              key: navigationBarKey,
-              backgroundColor: HyperosTheme.surface(context),
-              elevation: 0,
-              items: _pages.map(_buildNavigationItem).toList(),
-              currentIndex: _selectedIndex,
-              type: BottomNavigationBarType.fixed,
-              selectedItemColor: HyperosTheme.accent,
-              unselectedItemColor: HyperosTheme.secondaryText(context),
-              selectedFontSize: 12,
-              unselectedFontSize: 12,
-              onTap: (index) => setState(() {
-                // close chat overlay when go chat page
-                if (_selectedIndex != index) {
-                  _selectedIndex = index;
-                  if (isChatPageCurrentTab) {
-                    gFFI.chatModel.hideChatIconOverlay();
-                    gFFI.chatModel.hideChatWindowOverlay();
-                    gFFI.chatModel.mobileClearClientUnread(
-                      gFFI.chatModel.currentKey.connId,
-                    );
-                  }
-                }
-              }),
+          minimum: const EdgeInsets.only(bottom: 24),
+          child: Center(
+            heightFactor: 1,
+            child: SizedBox(
+              width: 240,
+              height: 56,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: HyperosTheme.shadow(context),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: HyperosTheme.isDark(context)
+                            ? const Color(0xFA2C2C2C)
+                            : Colors.white.withOpacity(0.94),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: HyperosTheme.isDark(context)
+                              ? Colors.white.withOpacity(0.10)
+                              : Colors.white,
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: BottomNavigationBar(
+                        key: navigationBarKey,
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        items: _pages.map(_buildNavigationItem).toList(),
+                        currentIndex: _selectedIndex,
+                        type: BottomNavigationBarType.fixed,
+                        selectedItemColor: HyperosTheme.accent,
+                        unselectedItemColor: HyperosTheme.secondaryText(
+                          context,
+                        ).withOpacity(0.58),
+                        showSelectedLabels: false,
+                        showUnselectedLabels: false,
+                        selectedFontSize: 0,
+                        unselectedFontSize: 0,
+                        iconSize: 23,
+                        onTap: (index) => setState(() {
+                          // close chat overlay when go chat page
+                          if (_selectedIndex != index) {
+                            _selectedIndex = index;
+                            if (isChatPageCurrentTab) {
+                              gFFI.chatModel.hideChatIconOverlay();
+                              gFFI.chatModel.hideChatWindowOverlay();
+                              gFFI.chatModel.mobileClearClientUnread(
+                                gFFI.chatModel.currentKey.connId,
+                              );
+                            }
+                          }
+                        }),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -123,17 +154,18 @@ class HomePageState extends State<HomePage> {
 
   BottomNavigationBarItem _buildNavigationItem(PageShape page) {
     return BottomNavigationBarItem(
-      icon: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: page.icon,
+      icon: SizedBox(
+        width: 42,
+        height: 36,
+        child: Center(child: page.icon),
       ),
-      activeIcon: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 6),
-        decoration: BoxDecoration(
-          color: HyperosTheme.accent.withOpacity(0.13),
-          borderRadius: BorderRadius.circular(16),
+      activeIcon: SizedBox(
+        width: 42,
+        height: 36,
+        child: IconTheme(
+          data: const IconThemeData(color: HyperosTheme.accent, size: 23),
+          child: Center(child: page.icon),
         ),
-        child: page.icon,
       ),
       label: page.title,
     );
@@ -183,24 +215,14 @@ class HomePageState extends State<HomePage> {
         ],
       );
     }
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _pages.elementAt(_selectedIndex).title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
-        const SizedBox(height: 2),
-        Text(
-          bind.mainGetAppNameSync(),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      ],
+    return Text(
+      _pages.elementAt(_selectedIndex).title,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+        fontSize: 32,
+        height: 1.05,
+      ),
     );
   }
 }

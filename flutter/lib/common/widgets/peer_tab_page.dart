@@ -23,6 +23,7 @@ import 'package:provider/provider.dart';
 import 'package:pull_down_button/pull_down_button.dart';
 
 import '../../common.dart';
+import '../../mobile/hyperos_theme.dart';
 import '../../models/platform_model.dart';
 
 class PeerTabPage extends StatefulWidget {
@@ -109,8 +110,21 @@ class _PeerTabPageState extends State<PeerTabPage>
       textBaseline: TextBaseline.ideographic,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (isMobile)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(2, 0, 2, 10),
+            child: Text(
+              model.tabTooltip(model.currentTab),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         Obx(() => SizedBox(
-              height: 32,
+              height: isMobile ? 40 : 32,
               child: Container(
                 padding: stateGlobal.isPortrait.isTrue
                     ? EdgeInsets.symmetric(horizontal: 2)
@@ -137,25 +151,33 @@ class _PeerTabPageState extends State<PeerTabPage>
   Widget _createSwitchBar(BuildContext context) {
     final model = Provider.of<PeerTabModel>(context);
     var counter = -1;
-    return ReorderableListView(
+    final switcher = ReorderableListView(
         buildDefaultDragHandles: false,
         onReorder: model.reorder,
         scrollDirection: Axis.horizontal,
         physics: NeverScrollableScrollPhysics(),
         children: model.visibleEnabledOrderedIndexs.map((t) {
           final selected = model.currentTab == t;
-          final color = selected
-              ? MyTheme.tabbar(context).selectedTextColor
-              : MyTheme.tabbar(context).unSelectedTextColor
-            ?..withOpacity(0.5);
+          final color = isMobile
+              ? (selected
+                    ? HyperosTheme.accent
+                    : HyperosTheme.secondaryText(context).withOpacity(0.55))
+              : (selected
+                    ? MyTheme.tabbar(context).selectedTextColor
+                    : MyTheme.tabbar(
+                        context,
+                      ).unSelectedTextColor?.withOpacity(0.5));
           final hover = false.obs;
           final deco = BoxDecoration(
               color: Theme.of(context).colorScheme.background,
-              borderRadius: BorderRadius.circular(6));
+              borderRadius: BorderRadius.circular(isMobile ? 12 : 6));
           final decoBorder = BoxDecoration(
-              border: Border(
-            bottom: BorderSide(width: 2, color: color!),
-          ));
+            color: isMobile ? HyperosTheme.accentSurface(context) : null,
+            borderRadius: isMobile ? BorderRadius.circular(12) : null,
+            border: isMobile
+                ? null
+                : Border(bottom: BorderSide(width: 2, color: color!)),
+          );
           counter += 1;
           return ReorderableDragStartListener(
               key: ValueKey(t),
@@ -170,8 +192,8 @@ class _PeerTabPageState extends State<PeerTabPage>
                             ? (selected ? decoBorder : deco)
                             : (selected ? decoBorder : null)),
                         child: Icon(model.tabIcon(t), color: color)
-                            .paddingSymmetric(horizontal: 4),
-                      ).paddingSymmetric(horizontal: 4),
+                            .paddingSymmetric(horizontal: isMobile ? 6 : 4),
+                      ).paddingSymmetric(horizontal: isMobile ? 2 : 4),
                       onTap: isOptionFixed(kOptionPeerTabIndex)
                           ? null
                           : () async {
@@ -183,6 +205,16 @@ class _PeerTabPageState extends State<PeerTabPage>
                     ),
                   )));
         }).toList());
+    if (!isMobile) return switcher;
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: HyperosTheme.surfaceMuted(context),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: switcher,
+    );
   }
 
   Widget _createPeersView() {

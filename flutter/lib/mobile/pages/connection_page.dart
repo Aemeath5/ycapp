@@ -86,7 +86,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
       child: CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 2, 16, 0),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 if (!bind.isCustomClient() && !isIOS)
@@ -96,10 +96,18 @@ class _ConnectionPageState extends State<ConnectionPage> {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             sliver: SliverFillRemaining(
               hasScrollBody: true,
-              child: PeerTabPage(),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+                decoration: BoxDecoration(
+                  color: HyperosTheme.surface(context),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: const PeerTabPage(),
+              ),
             ),
           ),
         ],
@@ -138,9 +146,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
         : Container(
             margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
-              color: HyperosTheme.surfaceMuted(context),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: HyperosTheme.border(context)),
+              color: HyperosTheme.accentSurface(context),
+              borderRadius: BorderRadius.circular(16),
             ),
             clipBehavior: Clip.antiAlias,
             child: Material(
@@ -195,21 +202,70 @@ class _ConnectionPageState extends State<ConnectionPage> {
   /// Search for a peer and connect to it if the id exists.
   Widget _buildRemoteIDTextField() {
     final w = Container(
-      constraints: const BoxConstraints(minHeight: 98),
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      margin: const EdgeInsets.only(top: 8, bottom: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: HyperosTheme.surface(context),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: HyperosTheme.border(context)),
-        boxShadow: HyperosTheme.shadow(context),
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.only(left: 16, right: 16),
-              child: RawAutocomplete<Peer>(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: HyperosTheme.accentSurface(context),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.devices_rounded,
+                  color: HyperosTheme.accent,
+                  size: 25,
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      translate('New Connection'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      translate('Enter Remote ID'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: HyperosTheme.secondaryText(context),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 4, 6, 4),
+            decoration: BoxDecoration(
+              color: HyperosTheme.surfaceMuted(context),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: RawAutocomplete<Peer>(
                 optionsBuilder: (TextEditingValue textEditingValue) {
                   if (textEditingValue.text == '') {
                     _autocompleteOpts = const Iterable<Peer>.empty();
@@ -387,52 +443,43 @@ class _ConnectionPageState extends State<ConnectionPage> {
                         ),
                       );
                     },
-              ),
-            ),
-          ),
-          Obx(
-            () => Offstage(
-              offstage: _idEmpty.value,
-              child: IconButton(
-                onPressed: () {
-                  setState(() {
-                    _idController.clear();
-                  });
-                },
-                icon: Icon(
-                  Icons.close_rounded,
-                  color: HyperosTheme.secondaryText(context),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 60,
-            height: 60,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [HyperosTheme.accent, HyperosTheme.accentEnd],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: HyperosTheme.accent.withOpacity(0.28),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
                   ),
-                ],
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.arrow_forward_rounded,
-                  color: Colors.white,
-                  size: 31,
                 ),
-                onPressed: onConnect,
-              ),
+                Obx(
+                  () => Offstage(
+                    offstage: _idEmpty.value,
+                    child: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _idController.clear();
+                        });
+                      },
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: HyperosTheme.secondaryText(context),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: HyperosTheme.accent,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                        size: 29,
+                      ),
+                      onPressed: onConnect,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

@@ -300,19 +300,55 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
     final incomingOnly = bind.isIncomingOnly();
     final customClientSection = CustomSettingsSection(
       child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+        margin: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         decoration: BoxDecoration(
           color: HyperosTheme.surface(context),
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: HyperosTheme.border(context)),
-          boxShadow: HyperosTheme.shadow(context),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           children: [
             if (bind.isCustomClient())
+              Align(alignment: Alignment.center, child: loadLogo()),
+            if (!bind.isCustomClient())
+              Row(
+                children: [
+                  SizedBox(
+                    width: 72,
+                    height: 72,
+                    child: Center(child: loadIcon(56)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          bind.mainGetAppNameSync(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          '${translate("Version: ")}$version',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: HyperosTheme.secondaryText(context),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            if (bind.isCustomClient())
               Align(alignment: Alignment.center, child: loadPowered(context)),
-            Align(alignment: Alignment.center, child: loadLogo()),
           ],
         ),
       ),
@@ -1142,27 +1178,27 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
         settingsListBackground: HyperosTheme.lightBackground,
         settingsSectionBackground: Colors.transparent,
         dividerColor: Colors.transparent,
-        tileHighlightColor: Color(0x143482FF),
+        tileHighlightColor: Color(0x140D84FF),
         titleTextColor: HyperosTheme.accent,
         leadingIconsColor: HyperosTheme.accent,
         trailingTextColor: HyperosTheme.lightSecondaryText,
         tileDescriptionTextColor: HyperosTheme.lightSecondaryText,
         settingsTileTextColor: HyperosTheme.lightText,
-        inactiveTitleColor: Color(0x6619191B),
-        inactiveSubtitleColor: Color(0x557A7B82),
+        inactiveTitleColor: Color(0x6617181A),
+        inactiveSubtitleColor: Color(0x557C7F86),
       ),
       darkTheme: const SettingsThemeData(
         settingsListBackground: HyperosTheme.darkBackground,
         settingsSectionBackground: Colors.transparent,
         dividerColor: Colors.transparent,
-        tileHighlightColor: Color(0x223482FF),
-        titleTextColor: HyperosTheme.accentEnd,
-        leadingIconsColor: HyperosTheme.accentEnd,
+        tileHighlightColor: Color(0x220D84FF),
+        titleTextColor: HyperosTheme.accent,
+        leadingIconsColor: HyperosTheme.accent,
         trailingTextColor: HyperosTheme.darkSecondaryText,
         tileDescriptionTextColor: HyperosTheme.darkSecondaryText,
         settingsTileTextColor: HyperosTheme.darkText,
         inactiveTitleColor: Color(0x66F4F4F6),
-        inactiveSubtitleColor: Color(0x55A4A5AC),
+        inactiveSubtitleColor: Color(0x55A5A7AD),
       ),
       sections: sections.map(_buildHyperosSettingsSection).toList(),
     );
@@ -1184,30 +1220,26 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
             children: [
               if (section.title != null)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
                   child: DefaultTextStyle(
                     style: TextStyle(
-                      color: HyperosTheme.isDark(context)
-                          ? HyperosTheme.accentEnd
-                          : HyperosTheme.accent,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      color: HyperosTheme.secondaryText(context),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
                     child: section.title!,
                   ),
                 ),
               Container(
                 margin: EdgeInsets.fromLTRB(
-                  16,
+                  12,
                   section.title == null ? 12 : 0,
-                  16,
-                  10,
+                  12,
+                  8,
                 ),
                 decoration: BoxDecoration(
                   color: HyperosTheme.surface(context),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: HyperosTheme.border(context)),
-                  boxShadow: HyperosTheme.shadow(context),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: SettingsSection(tiles: section.tiles),
@@ -1393,8 +1425,7 @@ class ScanButton extends StatelessWidget {
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         color: HyperosTheme.surfaceMuted(context),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: HyperosTheme.border(context)),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: IconButton(
         icon: const Icon(
