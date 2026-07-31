@@ -13,6 +13,8 @@ import '../../common/widgets/dialog.dart';
 import '../../consts.dart';
 import '../../models/platform_model.dart';
 import '../../models/server_model.dart';
+import '../hyperos_theme.dart';
+import '../widgets/miuix_widgets.dart';
 import 'home_page.dart';
 
 class ServerPage extends StatefulWidget implements PageShape {
@@ -34,148 +36,285 @@ class ServerPage extends StatefulWidget implements PageShape {
   State<StatefulWidget> createState() => _ServerPageState();
 }
 
+class _MiuiPopupEntry {
+  const _MiuiPopupEntry.item({
+    required this.value,
+    required this.label,
+    this.enabled = true,
+    this.checked,
+  }) : divider = false;
+
+  const _MiuiPopupEntry.divider()
+      : value = null,
+        label = null,
+        enabled = false,
+        checked = null,
+        divider = true;
+
+  final String? value;
+  final String? label;
+  final bool enabled;
+  final bool? checked;
+  final bool divider;
+}
+
 class _DropDownAction extends StatelessWidget {
-  _DropDownAction();
+  const _DropDownAction();
 
-  // should only have one action
-  final actions = [
-    PopupMenuButton<String>(
-        tooltip: "",
-        icon: const Icon(Icons.more_vert),
-        itemBuilder: (context) {
-          listTile(String text, bool checked) {
-            return ListTile(
-                title: Text(translate(text)),
-                trailing: Icon(
-                  Icons.check,
-                  color: checked ? null : Colors.transparent,
-                ));
-          }
+  List<_MiuiPopupEntry> _entries() {
+    final approveMode = gFFI.serverModel.approveMode;
+    final verificationMethod = gFFI.serverModel.verificationMethod;
+    final showPasswordOption = approveMode != 'click';
+    final isApproveModeFixed = isOptionFixed(kOptionApproveMode);
+    final isNumericOneTimePasswordFixed =
+        isOptionFixed(kOptionAllowNumericOneTimePassword);
+    final entries = <_MiuiPopupEntry>[];
 
-          final approveMode = gFFI.serverModel.approveMode;
-          final verificationMethod = gFFI.serverModel.verificationMethod;
-          final showPasswordOption = approveMode != 'click';
-          final isApproveModeFixed = isOptionFixed(kOptionApproveMode);
-          final isNumericOneTimePasswordFixed =
-              isOptionFixed(kOptionAllowNumericOneTimePassword);
-          final isAllowNumericOneTimePassword =
-              gFFI.serverModel.allowNumericOneTimePassword;
-          return [
-            if (!isChangeIdDisabled())
-              PopupMenuItem(
-                enabled: gFFI.serverModel.connectStatus > 0,
-                value: "changeID",
-                child: Text(translate("Change ID")),
-              ),
-            if (!isChangeIdDisabled()) const PopupMenuDivider(),
-            PopupMenuItem(
-              value: 'AcceptSessionsViaPassword',
-              child: listTile(
-                  'Accept sessions via password', approveMode == 'password'),
-              enabled: !isApproveModeFixed,
-            ),
-            PopupMenuItem(
-              value: 'AcceptSessionsViaClick',
-              child:
-                  listTile('Accept sessions via click', approveMode == 'click'),
-              enabled: !isApproveModeFixed,
-            ),
-            PopupMenuItem(
-              value: "AcceptSessionsViaBoth",
-              child: listTile("Accept sessions via both",
-                  approveMode != 'password' && approveMode != 'click'),
-              enabled: !isApproveModeFixed,
-            ),
-            if (showPasswordOption) const PopupMenuDivider(),
-            if (showPasswordOption &&
-                verificationMethod != kUseTemporaryPassword &&
-                !isChangePermanentPasswordDisabled())
-              PopupMenuItem(
-                value: "setPermanentPassword",
-                child: Text(translate("Set permanent password")),
-              ),
-            if (showPasswordOption &&
-                verificationMethod != kUsePermanentPassword)
-              PopupMenuItem(
-                value: "setTemporaryPasswordLength",
-                child: Text(translate("One-time password length")),
-              ),
-            if (showPasswordOption &&
-                verificationMethod != kUsePermanentPassword)
-              PopupMenuItem(
-                value: "allowNumericOneTimePassword",
-                child: listTile(translate("Numeric one-time password"),
-                    isAllowNumericOneTimePassword),
-                enabled: !isNumericOneTimePasswordFixed,
-              ),
-            if (showPasswordOption) const PopupMenuDivider(),
-            if (showPasswordOption)
-              PopupMenuItem(
-                value: kUseTemporaryPassword,
-                child: listTile('Use one-time password',
-                    verificationMethod == kUseTemporaryPassword),
-              ),
-            if (showPasswordOption)
-              PopupMenuItem(
-                value: kUsePermanentPassword,
-                child: listTile('Use permanent password',
-                    verificationMethod == kUsePermanentPassword),
-              ),
-            if (showPasswordOption)
-              PopupMenuItem(
-                value: kUseBothPasswords,
-                child: listTile(
-                    'Use both passwords',
-                    verificationMethod != kUseTemporaryPassword &&
-                        verificationMethod != kUsePermanentPassword),
-              ),
-          ];
-        },
-        onSelected: (value) async {
-          if (value == "changeID") {
-            changeIdDialog();
-          } else if (value == "setPermanentPassword") {
-            setPasswordDialog();
-          } else if (value == "setTemporaryPasswordLength") {
-            setTemporaryPasswordLengthDialog(gFFI.dialogManager);
-          } else if (value == "allowNumericOneTimePassword") {
-            gFFI.serverModel.switchAllowNumericOneTimePassword();
-            gFFI.serverModel.updatePasswordModel();
-          } else if (value == kUsePermanentPassword ||
-              value == kUseTemporaryPassword ||
-              value == kUseBothPasswords) {
-            callback() {
-              bind.mainSetOption(key: kOptionVerificationMethod, value: value);
-              gFFI.serverModel.updatePasswordModel();
-            }
+    if (!isChangeIdDisabled()) {
+      entries.add(
+        _MiuiPopupEntry.item(
+          value: 'changeID',
+          label: 'Change ID',
+          enabled: gFFI.serverModel.connectStatus > 0,
+        ),
+      );
+      entries.add(const _MiuiPopupEntry.divider());
+    }
 
-            if (value == kUsePermanentPassword &&
-                (await bind.mainGetCommon(key: "permanent-password-set")) !=
-                    "true") {
-              if (isChangePermanentPasswordDisabled()) {
-                callback();
-                return;
-              }
-              setPasswordDialog(notEmptyCallback: callback);
-            } else {
-              callback();
-            }
-          } else if (value.startsWith("AcceptSessionsVia")) {
-            value = value.substring("AcceptSessionsVia".length);
-            if (value == "Password") {
-              gFFI.serverModel.setApproveMode('password');
-            } else if (value == "Click") {
-              gFFI.serverModel.setApproveMode('click');
-            } else {
-              gFFI.serverModel.setApproveMode(defaultOptionApproveMode);
-            }
-          }
-        })
-  ];
+    entries.addAll([
+      _MiuiPopupEntry.item(
+        value: 'AcceptSessionsViaPassword',
+        label: 'Accept sessions via password',
+        checked: approveMode == 'password',
+        enabled: !isApproveModeFixed,
+      ),
+      _MiuiPopupEntry.item(
+        value: 'AcceptSessionsViaClick',
+        label: 'Accept sessions via click',
+        checked: approveMode == 'click',
+        enabled: !isApproveModeFixed,
+      ),
+      _MiuiPopupEntry.item(
+        value: 'AcceptSessionsViaBoth',
+        label: 'Accept sessions via both',
+        checked: approveMode != 'password' && approveMode != 'click',
+        enabled: !isApproveModeFixed,
+      ),
+    ]);
+
+    if (showPasswordOption) {
+      entries.add(const _MiuiPopupEntry.divider());
+      if (verificationMethod != kUseTemporaryPassword &&
+          !isChangePermanentPasswordDisabled()) {
+        entries.add(
+          const _MiuiPopupEntry.item(
+            value: 'setPermanentPassword',
+            label: 'Set permanent password',
+          ),
+        );
+      }
+      if (verificationMethod != kUsePermanentPassword) {
+        entries.addAll([
+          const _MiuiPopupEntry.item(
+            value: 'setTemporaryPasswordLength',
+            label: 'One-time password length',
+          ),
+          _MiuiPopupEntry.item(
+            value: 'allowNumericOneTimePassword',
+            label: 'Numeric one-time password',
+            checked: gFFI.serverModel.allowNumericOneTimePassword,
+            enabled: !isNumericOneTimePasswordFixed,
+          ),
+        ]);
+      }
+      entries.addAll([
+        const _MiuiPopupEntry.divider(),
+        _MiuiPopupEntry.item(
+          value: kUseTemporaryPassword,
+          label: 'Use one-time password',
+          checked: verificationMethod == kUseTemporaryPassword,
+        ),
+        _MiuiPopupEntry.item(
+          value: kUsePermanentPassword,
+          label: 'Use permanent password',
+          checked: verificationMethod == kUsePermanentPassword,
+        ),
+        _MiuiPopupEntry.item(
+          value: kUseBothPasswords,
+          label: 'Use both passwords',
+          checked: verificationMethod != kUseTemporaryPassword &&
+              verificationMethod != kUsePermanentPassword,
+        ),
+      ]);
+    }
+
+    return entries;
+  }
+
+  Future<void> _showMenu(BuildContext context) async {
+    final entries = _entries();
+    final value = await showGeneralDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 180),
+      pageBuilder: (dialogContext, _, __) {
+        return SafeArea(
+          child: Stack(
+            children: [
+              Positioned(
+                top: 8,
+                right: 12,
+                left: 32,
+                bottom: 18,
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 360),
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: HyperosTheme.surface(dialogContext),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: HyperosTheme.border(dialogContext),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(
+                                HyperosTheme.isDark(dialogContext)
+                                    ? 0.34
+                                    : 0.18,
+                              ),
+                              blurRadius: 30,
+                              offset: const Offset(0, 12),
+                            ),
+                          ],
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: entries.map((entry) {
+                              if (entry.divider) {
+                                return Divider(
+                                  height: 13,
+                                  thickness: 0.7,
+                                  color: HyperosTheme.border(dialogContext),
+                                );
+                              }
+                              return MiuiPreferenceTile(
+                                title: Text(translate(entry.label!)),
+                                trailing: entry.checked == null
+                                    ? null
+                                    : Icon(
+                                        Icons.check_rounded,
+                                        color: entry.checked!
+                                            ? HyperosTheme.accent
+                                            : Colors.transparent,
+                                      ),
+                                enabled: entry.enabled,
+                                onTap: entry.enabled
+                                    ? () => Navigator.pop(
+                                          dialogContext,
+                                          entry.value,
+                                        )
+                                    : null,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                minHeight: 48,
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      transitionBuilder: (_, animation, __, child) {
+        final curve = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return FadeTransition(
+          opacity: curve,
+          child: ScaleTransition(
+            alignment: Alignment.topRight,
+            scale: Tween<double>(begin: 0.96, end: 1).animate(curve),
+            child: child,
+          ),
+        );
+      },
+    );
+
+    if (value != null) {
+      await _handleSelected(value);
+    }
+  }
+
+  Future<void> _handleSelected(String selectedValue) async {
+    var value = selectedValue;
+    if (value == 'changeID') {
+      changeIdDialog();
+    } else if (value == 'setPermanentPassword') {
+      setPasswordDialog();
+    } else if (value == 'setTemporaryPasswordLength') {
+      setTemporaryPasswordLengthDialog(gFFI.dialogManager);
+    } else if (value == 'allowNumericOneTimePassword') {
+      gFFI.serverModel.switchAllowNumericOneTimePassword();
+      gFFI.serverModel.updatePasswordModel();
+    } else if (value == kUsePermanentPassword ||
+        value == kUseTemporaryPassword ||
+        value == kUseBothPasswords) {
+      callback() {
+        bind.mainSetOption(key: kOptionVerificationMethod, value: value);
+        gFFI.serverModel.updatePasswordModel();
+      }
+
+      if (value == kUsePermanentPassword &&
+          (await bind.mainGetCommon(key: 'permanent-password-set')) != 'true') {
+        if (isChangePermanentPasswordDisabled()) {
+          callback();
+          return;
+        }
+        setPasswordDialog(notEmptyCallback: callback);
+      } else {
+        callback();
+      }
+    } else if (value.startsWith('AcceptSessionsVia')) {
+      value = value.substring('AcceptSessionsVia'.length);
+      if (value == 'Password') {
+        gFFI.serverModel.setApproveMode('password');
+      } else if (value == 'Click') {
+        gFFI.serverModel.setApproveMode('click');
+      } else {
+        gFFI.serverModel.setApproveMode(defaultOptionApproveMode);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return actions[0];
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: IconButton(
+        tooltip: '',
+        icon: const Icon(Icons.more_vert_rounded),
+        onPressed: () => _showMenu(context),
+      ),
+    );
   }
 }
 
@@ -583,9 +722,8 @@ class _PermissionCheckerState extends State<PermissionChecker> {
   Widget build(BuildContext context) {
     final serverModel = Provider.of<ServerModel>(context);
     final hasAudioPermission = androidVersion >= 30;
-    final hideStopService =
-        isAndroid &&
-            bind.mainGetBuildinOption(key: kOptionHideStopService) == 'Y';
+    final hideStopService = isAndroid &&
+        bind.mainGetBuildinOption(key: kOptionHideStopService) == 'Y';
     return PaddingCard(
         title: translate("Permissions"),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -639,14 +777,12 @@ class PermissionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SwitchListTile(
-        visualDensity: VisualDensity.compact,
-        contentPadding: EdgeInsets.all(0),
-        title: Text(name),
-        value: isOk,
-        onChanged: (bool value) {
-          onPressed();
-        });
+    return MiuiPreferenceTile(
+      title: Text(name),
+      switchValue: isOk,
+      onToggle: (_) => onPressed(),
+      contentPadding: const EdgeInsets.symmetric(vertical: 7),
+    );
   }
 }
 
@@ -803,43 +939,29 @@ class PaddingCard extends StatelessWidget {
               child: Row(
                 children: [
                   if (titleIcon != null)
-                    Container(
-                      width: 38,
-                      height: 38,
-                      margin: const EdgeInsets.only(right: 12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withOpacity(0.10),
-                        borderRadius: BorderRadius.circular(12),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 13),
+                      child: MiuiIconContainer(
+                        size: 42,
+                        color: titleIcon!.color ?? HyperosTheme.accent,
+                        child: titleIcon!,
                       ),
-                      child: Center(child: titleIcon!),
                     ),
                   Expanded(
                     child: Text(title!,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.merge(TextStyle(fontWeight: FontWeight.bold))),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w700,
+                            )),
                   )
                 ],
               )));
     }
-    return SizedBox(
-        width: double.maxFinite,
-        child: Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          margin: const EdgeInsets.fromLTRB(12.0, 8.0, 12.0, 0),
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-            child: Column(
-              children: children,
-            ),
-          ),
-        ));
+    return MiuiSectionCard(
+      margin: const EdgeInsets.fromLTRB(12, 7, 12, 0),
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+      child: Column(children: children),
+    );
   }
 }
 

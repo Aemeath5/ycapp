@@ -118,9 +118,9 @@ class _PeerTabPageState extends State<PeerTabPage>
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-              ),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ),
         Obx(() => SizedBox(
@@ -160,13 +160,13 @@ class _PeerTabPageState extends State<PeerTabPage>
           final selected = model.currentTab == t;
           final color = isMobile
               ? (selected
-                    ? HyperosTheme.accent
-                    : HyperosTheme.secondaryText(context).withOpacity(0.55))
+                  ? HyperosTheme.accent
+                  : HyperosTheme.secondaryText(context).withOpacity(0.55))
               : (selected
-                    ? MyTheme.tabbar(context).selectedTextColor
-                    : MyTheme.tabbar(
-                        context,
-                      ).unSelectedTextColor?.withOpacity(0.5));
+                  ? MyTheme.tabbar(context).selectedTextColor
+                  : MyTheme.tabbar(
+                      context,
+                    ).unSelectedTextColor?.withOpacity(0.5));
           final hover = false.obs;
           final deco = BoxDecoration(
               color: Theme.of(context).colorScheme.background,

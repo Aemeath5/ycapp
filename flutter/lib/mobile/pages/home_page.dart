@@ -87,14 +87,14 @@ class HomePageState extends State<HomePage> {
             heightFactor: 1,
             child: SizedBox(
               width: 240,
-              height: 56,
+              height: 50,
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(25),
                   boxShadow: HyperosTheme.shadow(context),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(25),
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                     child: Container(
@@ -102,11 +102,11 @@ class HomePageState extends State<HomePage> {
                         color: HyperosTheme.isDark(context)
                             ? const Color(0xFA2C2C2C)
                             : Colors.white.withOpacity(0.94),
-                        borderRadius: BorderRadius.circular(28),
+                        borderRadius: BorderRadius.circular(25),
                         border: Border.all(
                           color: HyperosTheme.isDark(context)
                               ? Colors.white.withOpacity(0.10)
-                              : Colors.white,
+                              : HyperosTheme.border(context),
                         ),
                       ),
                       clipBehavior: Clip.antiAlias,
@@ -125,7 +125,7 @@ class HomePageState extends State<HomePage> {
                         showUnselectedLabels: false,
                         selectedFontSize: 0,
                         unselectedFontSize: 0,
-                        iconSize: 23,
+                        iconSize: 22,
                         onTap: (index) => setState(() {
                           // close chat overlay when go chat page
                           if (_selectedIndex != index) {
@@ -156,14 +156,14 @@ class HomePageState extends State<HomePage> {
     return BottomNavigationBarItem(
       icon: SizedBox(
         width: 42,
-        height: 36,
+        height: 32,
         child: Center(child: page.icon),
       ),
       activeIcon: SizedBox(
         width: 42,
-        height: 36,
+        height: 32,
         child: IconTheme(
-          data: const IconThemeData(color: HyperosTheme.accent, size: 23),
+          data: const IconThemeData(color: HyperosTheme.accent, size: 22),
           child: Center(child: page.icon),
         ),
       ),
@@ -220,9 +220,9 @@ class HomePageState extends State<HomePage> {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-        fontSize: 32,
-        height: 1.05,
-      ),
+            fontSize: 32,
+            height: 1.05,
+          ),
     );
   }
 }
