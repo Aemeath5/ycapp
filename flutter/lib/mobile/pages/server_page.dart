@@ -157,7 +157,9 @@ class _DropDownAction extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      barrierColor: Colors.transparent,
+      barrierColor: HyperosTheme.isDark(context)
+          ? const Color(0x66000000)
+          : const Color(0x17000000),
       transitionDuration: const Duration(milliseconds: 180),
       pageBuilder: (dialogContext, _, __) {
         return SafeArea(
@@ -170,8 +172,10 @@ class _DropDownAction extends StatelessWidget {
                 bottom: 18,
                 child: Align(
                   alignment: Alignment.topRight,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 360),
+                  child: SizedBox(
+                    width: (MediaQuery.of(dialogContext).size.width * 0.68)
+                        .clamp(224.0, 288.0)
+                        .toDouble(),
                     child: Material(
                       type: MaterialType.transparency,
                       child: Container(
@@ -225,9 +229,9 @@ class _DropDownAction extends StatelessWidget {
                                     : null,
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 20,
-                                  vertical: 12,
+                                  vertical: 15,
                                 ),
-                                minHeight: 48,
+                                minHeight: 56,
                               );
                             }).toList(),
                           ),
@@ -344,6 +348,8 @@ class _ServerPageState extends State<ServerPage> {
         child: Consumer<ServerModel>(
             builder: (context, serverModel, child) => SingleChildScrollView(
                   controller: gFFI.serverModel.controller,
+                  physics: HyperosTheme.springPhysics,
+                  padding: const EdgeInsets.only(bottom: 28),
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
@@ -959,7 +965,7 @@ class PaddingCard extends StatelessWidget {
     }
     return MiuiSectionCard(
       margin: const EdgeInsets.fromLTRB(12, 7, 12, 0),
-      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       child: Column(children: children),
     );
   }

@@ -82,7 +82,7 @@ class HomePageState extends State<HomePage> {
         ),
         bottomNavigationBar: SafeArea(
           top: false,
-          minimum: const EdgeInsets.only(bottom: 24),
+          minimum: const EdgeInsets.only(bottom: 34),
           child: Center(
             heightFactor: 1,
             child: SizedBox(
@@ -91,12 +91,12 @@ class HomePageState extends State<HomePage> {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
-                  boxShadow: HyperosTheme.shadow(context),
+                  boxShadow: HyperosTheme.capsuleShadow(context),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(25),
                   child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
                     child: Container(
                       decoration: BoxDecoration(
                         color: HyperosTheme.isDark(context)
@@ -120,7 +120,7 @@ class HomePageState extends State<HomePage> {
                         selectedItemColor: HyperosTheme.accent,
                         unselectedItemColor: HyperosTheme.secondaryText(
                           context,
-                        ).withOpacity(0.58),
+                        ).withOpacity(0.40),
                         showSelectedLabels: false,
                         showUnselectedLabels: false,
                         selectedFontSize: 0,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../hyperos_theme.dart';
 
@@ -62,7 +63,7 @@ class MiuiIconContainer extends StatelessWidget {
 }
 
 /// A non-Material switch with the dimensions and motion used by HyperOS.
-class MiuiSwitch extends StatelessWidget {
+class MiuiSwitch extends StatefulWidget {
   const MiuiSwitch({
     Key? key,
     required this.value,
@@ -73,48 +74,76 @@ class MiuiSwitch extends StatelessWidget {
   final ValueChanged<bool>? onChanged;
 
   @override
+  State<MiuiSwitch> createState() => _MiuiSwitchState();
+}
+
+class _MiuiSwitchState extends State<MiuiSwitch> {
+  var _pressed = false;
+
+  void _setPressed(bool pressed) {
+    if (_pressed == pressed || !mounted) return;
+    setState(() => _pressed = pressed);
+  }
+
+  void _toggle() {
+    if (widget.onChanged == null) return;
+    HapticFeedback.selectionClick();
+    widget.onChanged!(!widget.value);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final enabled = onChanged != null;
+    final enabled = widget.onChanged != null;
     final offColor = HyperosTheme.isDark(context)
         ? const Color(0xFF55575D)
-        : const Color(0xFFD5D7DC);
+        : const Color(0xFFD1D3D8);
 
     return Semantics(
       button: true,
       enabled: enabled,
-      toggled: value,
+      toggled: widget.value,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: enabled ? () => onChanged!(!value) : null,
-        child: SizedBox(
-          width: 49,
-          height: 28,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: (value ? HyperosTheme.accent : offColor)
-                  .withOpacity(enabled ? 1 : 0.48),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: AnimatedAlign(
+        onTap: enabled ? _toggle : null,
+        onTapDown: enabled ? (_) => _setPressed(true) : null,
+        onTapUp: enabled ? (_) => _setPressed(false) : null,
+        onTapCancel: enabled ? () => _setPressed(false) : null,
+        child: AnimatedScale(
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOutCubic,
+          scale: _pressed ? 0.96 : 1,
+          child: SizedBox(
+            width: 49,
+            height: 28,
+            child: AnimatedContainer(
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeOutCubic,
-              alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-              child: Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(enabled ? 1 : 0.82),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.16),
-                      blurRadius: 3,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: (widget.value ? HyperosTheme.accent : offColor)
+                    .withOpacity(enabled ? 1 : 0.48),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                alignment:
+                    widget.value ? Alignment.centerRight : Alignment.centerLeft,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 120),
+                  width: _pressed ? 22 : 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(enabled ? 1 : 0.82),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.16),
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -141,7 +170,10 @@ class MiuiPreferenceTile extends StatefulWidget {
     this.iconColor = HyperosTheme.accent,
     this.decorateLeading = false,
     this.minHeight = 56,
-    this.contentPadding = const EdgeInsets.all(16),
+    this.contentPadding = const EdgeInsets.symmetric(
+      horizontal: 16,
+      vertical: 15,
+    ),
   }) : super(key: key);
 
   final Widget title;
@@ -241,8 +273,8 @@ class _MiuiPreferenceTileState extends State<MiuiPreferenceTile> {
                       width: 28,
                       child: IconTheme.merge(
                         data: IconThemeData(
-                          color: HyperosTheme.text(context),
-                          size: 23,
+                          color: widget.iconColor,
+                          size: 24,
                         ),
                         child: Center(child: widget.leading!),
                       ),
@@ -257,18 +289,18 @@ class _MiuiPreferenceTileState extends State<MiuiPreferenceTile> {
                       DefaultTextStyle.merge(
                         style: TextStyle(
                           color: HyperosTheme.text(context),
-                          fontSize: 16,
-                          height: 1.24,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 17,
+                          height: 1.22,
+                          fontWeight: FontWeight.w600,
                         ),
                         child: widget.title,
                       ),
                       if (widget.subtitle != null) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
                         DefaultTextStyle.merge(
                           style: TextStyle(
                             color: HyperosTheme.secondaryText(context),
-                            fontSize: 12.5,
+                            fontSize: 14,
                             height: 1.28,
                             fontWeight: FontWeight.w400,
                           ),
