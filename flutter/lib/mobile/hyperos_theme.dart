@@ -8,22 +8,23 @@ import 'package:flutter/services.dart';
 class HyperosTheme {
   HyperosTheme._();
 
-  static const Color accent = Color(0xFF3482FF);
-  static const Color accentEnd = Color(0xFF5B9BFF);
+  static const Color accent = Color(0xFF0D84FF);
 
-  static const Color lightBackground = Color(0xFFF5F5F7);
+  static const Color lightBackground = Color(0xFFF4F5F7);
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightSurfaceMuted = Color(0xFFEEF3FC);
-  static const Color lightText = Color(0xFF19191B);
-  static const Color lightSecondaryText = Color(0xFF7A7B82);
-  static const Color lightBorder = Color(0x12000000);
+  static const Color lightSurfaceMuted = Color(0xFFF0F2F6);
+  static const Color lightAccentSurface = Color(0xFFE8F3FF);
+  static const Color lightText = Color(0xFF17181A);
+  static const Color lightSecondaryText = Color(0xFF7C7F86);
+  static const Color lightBorder = Color(0x0D000000);
 
-  static const Color darkBackground = Color(0xFF101114);
-  static const Color darkSurface = Color(0xFF1C1D21);
-  static const Color darkSurfaceMuted = Color(0xFF242A34);
+  static const Color darkBackground = Color(0xFF0F1012);
+  static const Color darkSurface = Color(0xFF1B1C1F);
+  static const Color darkSurfaceMuted = Color(0xFF25272C);
+  static const Color darkAccentSurface = Color(0xFF182D43);
   static const Color darkText = Color(0xFFF4F4F6);
-  static const Color darkSecondaryText = Color(0xFFA4A5AC);
-  static const Color darkBorder = Color(0x22FFFFFF);
+  static const Color darkSecondaryText = Color(0xFFA5A7AD);
+  static const Color darkBorder = Color(0x14FFFFFF);
 
   static ThemeData light(ThemeData base) => _build(
     base: base,
@@ -76,6 +77,12 @@ class HyperosTheme {
       scaffoldBackgroundColor: background,
       canvasColor: background,
       cardColor: surface,
+      cardTheme: CardTheme(
+        color: surface,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
       dialogBackgroundColor: surface,
       dividerColor: border,
       hintColor: secondaryText,
@@ -89,16 +96,23 @@ class HyperosTheme {
         foregroundColor: text,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        systemOverlayStyle: isDark
-            ? SystemUiOverlayStyle.light
-            : SystemUiOverlayStyle.dark,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness:
+              isDark ? Brightness.light : Brightness.dark,
+          statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+          systemNavigationBarColor: background,
+          systemNavigationBarDividerColor: Colors.transparent,
+          systemNavigationBarIconBrightness:
+              isDark ? Brightness.light : Brightness.dark,
+        ),
         titleSpacing: 20,
-        toolbarHeight: 72,
+        toolbarHeight: 68,
         titleTextStyle: TextStyle(
           color: text,
-          fontSize: 24,
+          fontSize: 22,
           fontWeight: FontWeight.w600,
-          letterSpacing: -0.4,
+          letterSpacing: -0.3,
         ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -107,11 +121,11 @@ class HyperosTheme {
         selectedItemColor: accent,
         unselectedItemColor: secondaryText,
         selectedLabelStyle: const TextStyle(
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w600,
         ),
         unselectedLabelStyle: const TextStyle(
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w500,
         ),
         type: BottomNavigationBarType.fixed,
@@ -120,7 +134,7 @@ class HyperosTheme {
         elevation: 18,
         backgroundColor: surface,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -132,15 +146,15 @@ class HyperosTheme {
         hintStyle: TextStyle(color: secondaryText),
         labelStyle: TextStyle(color: secondaryText),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: accent, width: 1.5),
         ),
       ),
@@ -152,7 +166,7 @@ class HyperosTheme {
           minimumSize: const Size(48, 50),
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
       ),
@@ -165,7 +179,7 @@ class HyperosTheme {
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
           side: BorderSide(color: border),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
       ),
@@ -213,8 +227,7 @@ class HyperosTheme {
         iconColor: accent,
         textColor: text,
         contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-        minVerticalPadding: 14,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        minVerticalPadding: 12,
       ),
       dividerTheme: DividerThemeData(color: border, thickness: 0.5, space: 1),
       popupMenuTheme: PopupMenuThemeData(
@@ -235,9 +248,9 @@ class HyperosTheme {
       textTheme: base.textTheme.copyWith(
         headlineSmall: TextStyle(
           color: text,
-          fontSize: 26,
-          fontWeight: FontWeight.w600,
-          letterSpacing: -0.5,
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.8,
         ),
         titleLarge: TextStyle(
           color: text,
@@ -274,6 +287,9 @@ class HyperosTheme {
   static Color surfaceMuted(BuildContext context) =>
       isDark(context) ? darkSurfaceMuted : lightSurfaceMuted;
 
+  static Color accentSurface(BuildContext context) =>
+      isDark(context) ? darkAccentSurface : lightAccentSurface;
+
   static Color text(BuildContext context) =>
       isDark(context) ? darkText : lightText;
 
@@ -285,7 +301,7 @@ class HyperosTheme {
 
   static List<BoxShadow> shadow(BuildContext context) => [
     BoxShadow(
-      color: Colors.black.withOpacity(isDark(context) ? 0.28 : 0.07),
+      color: Colors.black.withOpacity(isDark(context) ? 0.24 : 0.10),
       blurRadius: 28,
       offset: const Offset(0, 10),
     ),

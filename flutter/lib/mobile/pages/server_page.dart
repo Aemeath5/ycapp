@@ -799,10 +799,22 @@ class PaddingCard extends StatelessWidget {
       children.insert(
           0,
           Padding(
-              padding: const EdgeInsets.fromLTRB(0, 5, 0, 8),
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
               child: Row(
                 children: [
-                  titleIcon?.marginOnly(right: 10) ?? const SizedBox.shrink(),
+                  if (titleIcon != null)
+                    Container(
+                      width: 38,
+                      height: 38,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.10),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(child: titleIcon!),
+                    ),
                   Expanded(
                     child: Text(title!,
                         style: Theme.of(context)
@@ -817,12 +829,12 @@ class PaddingCard extends StatelessWidget {
         width: double.maxFinite,
         child: Card(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(13),
+            borderRadius: BorderRadius.circular(16),
           ),
-          margin: const EdgeInsets.fromLTRB(12.0, 10.0, 12.0, 0),
+          margin: const EdgeInsets.fromLTRB(12.0, 8.0, 12.0, 0),
           child: Padding(
             padding:
-                const EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
             child: Column(
               children: children,
             ),
