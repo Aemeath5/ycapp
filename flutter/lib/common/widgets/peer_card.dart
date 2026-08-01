@@ -12,6 +12,7 @@ import '../../common.dart';
 import '../../common/formatter/id_formatter.dart';
 import '../../models/peer_model.dart';
 import '../../models/platform_model.dart';
+import '../../mobile/hyperos_theme.dart';
 import '../../desktop/widgets/material_mod_popup_menu.dart' as mod_menu;
 import '../../desktop/widgets/popup_menu.dart';
 import 'dart:math' as math;
@@ -50,6 +51,12 @@ class _PeerCardState extends State<_PeerCard>
   final double _cardRadius = 16;
   final double _tileRadius = 12;
   final double _borderWidth = 2;
+  var _pressed = false;
+
+  void _setPressed(bool value) {
+    if (!mounted || _pressed == value) return;
+    setState(() => _pressed = value);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,39 +69,51 @@ class _PeerCardState extends State<_PeerCard>
     final PeerTabModel peerTabModel = Provider.of(context);
     final peer = super.widget.peer;
     return GestureDetector(
-        onDoubleTap: peerTabModel.multiSelectionMode
-            ? null
-            : () => widget.connect(context, peer.id),
-        onTap: () {
-          if (peerTabModel.multiSelectionMode) {
-            peerTabModel.select(peer);
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) => _setPressed(false),
+      onTapCancel: () => _setPressed(false),
+      onDoubleTap: peerTabModel.multiSelectionMode
+          ? null
+          : () => widget.connect(context, peer.id),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        if (peerTabModel.multiSelectionMode) {
+          peerTabModel.select(peer);
+        } else {
+          if (isMobile) {
+            widget.connect(context, peer.id);
           } else {
-            if (isMobile) {
-              widget.connect(context, peer.id);
-            } else {
-              peerTabModel.select(peer);
-            }
+            peerTabModel.select(peer);
           }
-        },
-        onLongPress: () => peerTabModel.select(peer),
-        child: child);
+        }
+      },
+      onLongPress: () {
+        _setPressed(false);
+        HapticFeedback.mediumImpact();
+        peerTabModel.select(peer);
+      },
+      child: child,
+    );
   }
 
   Widget _buildPortrait() {
     final peer = super.widget.peer;
-    return Card(
-        margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
-        elevation: 0,
-        color: Theme.of(context).colorScheme.background,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+    return AnimatedScale(
+      duration: HyperosTheme.motionFast,
+      curve: HyperosTheme.motionCurve,
+      scale: _pressed ? 0.985 : 1,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: HyperosTheme.surface(context),
+          borderRadius: BorderRadius.circular(HyperosTheme.cardRadius),
+          border: Border.all(color: HyperosTheme.border(context)),
         ),
         clipBehavior: Clip.antiAlias,
-        child: gestureDetector(
-          child: Container(
-              padding: EdgeInsets.only(left: 12, top: 8, bottom: 8),
-              child: _buildPeerTile(context, peer, null)),
-        ));
+        child: gestureDetector(child: _buildMiuiPortraitTile(peer)),
+      ),
+    );
   }
 
   Widget _buildLandscape() {
@@ -135,6 +154,147 @@ class _PeerCardState extends State<_PeerCard>
 
   bool _showNote(Peer peer) {
     return peerTabShowNote(widget.tab) && peer.note.isNotEmpty;
+  }
+
+  Widget _buildMiuiPortraitTile(Peer peer) {
+    hideUsernameOnCard ??=
+        bind.mainGetBuildinOption(key: kHideUsernameOnCard) == 'Y';
+    final name = hideUsernameOnCard == true
+        ? peer.hostname
+        : '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}';
+    final title = peer.alias.isEmpty ? formatID(peer.id) : peer.alias;
+    final details = <String>[
+      if (peer.alias.isNotEmpty) formatID(peer.id),
+      if (name.isNotEmpty) name,
+      if (_showNote(peer)) peer.note,
+    ];
+    final tagColors = peer.tags
+        .whereType<String>()
+        .take(3)
+        .map((tag) => gFFI.abModel.getCurrentAbTagColor(tag))
+        .toList();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 50,
+            height: 50,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: HyperosTheme.accentSurface(context),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  alignment: Alignment.center,
+                  child: getPlatformImage(peer.platform, size: 32),
+                ),
+                if (_shouldBuildPasswordIcon(peer))
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: HyperosTheme.accent,
+                        borderRadius: BorderRadius.circular(7),
+                        border: Border.all(
+                          color: HyperosTheme.surface(context),
+                          width: 2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.key_rounded,
+                        size: 10,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: HyperosTheme.motionStandard,
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: peer.online
+                            ? HyperosTheme.success
+                            : HyperosTheme.secondaryText(
+                                context,
+                              ).withOpacity(0.38),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: HyperosTheme.text(context),
+                          fontSize: 17,
+                          height: 1.2,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (details.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    details.join('  ·  '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: HyperosTheme.secondaryText(context),
+                      fontSize: 13,
+                      height: 1.25,
+                    ),
+                  ),
+                ],
+                if (tagColors.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: tagColors
+                        .map(
+                          (color) => Container(
+                            width: 12,
+                            height: 4,
+                            margin: const EdgeInsets.only(right: 4),
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          checkBoxOrActionMorePortrait(peer),
+        ],
+      ),
+    );
   }
 
   makeChild(bool isPortrait, Peer peer) {
@@ -429,27 +589,54 @@ class _PeerCardState extends State<_PeerCard>
     final PeerTabModel peerTabModel = Provider.of(context);
     final selected = peerTabModel.isPeerSelected(peer.id);
     if (peerTabModel.multiSelectionMode) {
-      return Padding(
-        padding: const EdgeInsets.all(12),
+      return AnimatedContainer(
+        duration: HyperosTheme.motionStandard,
+        curve: HyperosTheme.motionCurve,
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: selected
+              ? HyperosTheme.accent
+              : HyperosTheme.surfaceMuted(context),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color:
+                selected ? HyperosTheme.accent : HyperosTheme.border(context),
+          ),
+        ),
         child: selected
-            ? Icon(
-                Icons.check_box,
-                color: MyTheme.accent,
-              )
-            : Icon(Icons.check_box_outline_blank),
+            ? const Icon(Icons.check_rounded, color: Colors.white, size: 19)
+            : null,
       );
     } else {
-      return InkWell(
-          child: const Padding(
-              padding: EdgeInsets.all(12), child: Icon(Icons.more_vert)),
+      return Semantics(
+        button: true,
+        label: translate('More'),
+        child: GestureDetector(
           onTapDown: (e) {
             final x = e.globalPosition.dx;
             final y = e.globalPosition.dy;
             _menuPos = RelativeRect.fromLTRB(x, y, x, y);
           },
           onTap: () {
+            HapticFeedback.selectionClick();
             _showPeerMenu(peer.id);
-          });
+          },
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: HyperosTheme.surfaceMuted(context),
+              borderRadius: BorderRadius.circular(HyperosTheme.controlRadius),
+            ),
+            child: Icon(
+              Icons.more_horiz_rounded,
+              size: 21,
+              color: HyperosTheme.secondaryText(context),
+            ),
+          ),
+        ),
+      );
     }
   }
 
