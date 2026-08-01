@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hbb/mobile/pages/server_page.dart';
 import 'package:flutter_hbb/mobile/pages/settings_page.dart';
 import 'package:get/get.dart';
@@ -77,7 +78,25 @@ class HomePageState extends State<HomePage> {
           toolbarHeight: isChatPageCurrentTab ? 64 : 88,
           centerTitle: isChatPageCurrentTab,
           titleSpacing: isChatPageCurrentTab ? 16 : 24,
-          title: appTitle(),
+          title: AnimatedSwitcher(
+            duration: HyperosTheme.motionStandard,
+            switchInCurve: HyperosTheme.motionCurve,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) {
+              final offset = Tween<Offset>(
+                begin: const Offset(0, 0.08),
+                end: Offset.zero,
+              ).animate(animation);
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(position: offset, child: child),
+              );
+            },
+            child: KeyedSubtree(
+              key: ValueKey(_selectedIndex),
+              child: appTitle(),
+            ),
+          ),
           actions: _pages.elementAt(_selectedIndex).appBarActions,
         ),
         bottomNavigationBar: SafeArea(
@@ -96,7 +115,7 @@ class HomePageState extends State<HomePage> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(25),
                   child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+                    filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
                     child: Container(
                       decoration: BoxDecoration(
                         color: HyperosTheme.isDark(context)
@@ -126,19 +145,7 @@ class HomePageState extends State<HomePage> {
                         selectedFontSize: 0,
                         unselectedFontSize: 0,
                         iconSize: 22,
-                        onTap: (index) => setState(() {
-                          // close chat overlay when go chat page
-                          if (_selectedIndex != index) {
-                            _selectedIndex = index;
-                            if (isChatPageCurrentTab) {
-                              gFFI.chatModel.hideChatIconOverlay();
-                              gFFI.chatModel.hideChatWindowOverlay();
-                              gFFI.chatModel.mobileClearClientUnread(
-                                gFFI.chatModel.currentKey.connId,
-                              );
-                            }
-                          }
-                        }),
+                        onTap: _selectPage,
                       ),
                     ),
                   ),
@@ -152,19 +159,41 @@ class HomePageState extends State<HomePage> {
     );
   }
 
+  void _selectPage(int index) {
+    if (_selectedIndex == index) return;
+    HapticFeedback.selectionClick();
+    setState(() {
+      _selectedIndex = index;
+      if (isChatPageCurrentTab) {
+        gFFI.chatModel.hideChatIconOverlay();
+        gFFI.chatModel.hideChatWindowOverlay();
+        gFFI.chatModel.mobileClearClientUnread(
+          gFFI.chatModel.currentKey.connId,
+        );
+      }
+    });
+  }
+
   BottomNavigationBarItem _buildNavigationItem(PageShape page) {
     return BottomNavigationBarItem(
-      icon: SizedBox(
-        width: 42,
-        height: 32,
-        child: Center(child: page.icon),
-      ),
-      activeIcon: SizedBox(
-        width: 42,
-        height: 32,
-        child: IconTheme(
-          data: const IconThemeData(color: HyperosTheme.accent, size: 22),
-          child: Center(child: page.icon),
+      icon: SizedBox(width: 42, height: 32, child: Center(child: page.icon)),
+      activeIcon: TweenAnimationBuilder<double>(
+        duration: HyperosTheme.motionStandard,
+        curve: Curves.easeOutBack,
+        tween: Tween(begin: 0.86, end: 1),
+        builder: (context, scale, child) =>
+            Transform.scale(scale: scale, child: child),
+        child: Container(
+          width: 42,
+          height: 32,
+          decoration: BoxDecoration(
+            color: HyperosTheme.accentSurface(context),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: IconTheme(
+            data: const IconThemeData(color: HyperosTheme.accent, size: 22),
+            child: Center(child: page.icon),
+          ),
         ),
       ),
       label: page.title,
