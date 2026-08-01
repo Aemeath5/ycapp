@@ -10,6 +10,16 @@ class HyperosTheme {
 
   // HyperCeiler uses MIUIX's HyperOS blue (#0D84FF) for interactive states.
   static const Color accent = Color(0xFF0D84FF);
+  static const Color danger = Color(0xFFFF3B30);
+  static const Color success = Color(0xFF34C759);
+  static const Color warning = Color(0xFFFF9F0A);
+
+  static const double cardRadius = 16;
+  static const double controlRadius = 14;
+  static const double dialogRadius = 24;
+  static const Duration motionFast = Duration(milliseconds: 120);
+  static const Duration motionStandard = Duration(milliseconds: 220);
+  static const Curve motionCurve = Curves.easeOutCubic;
 
   static const Color lightBackground = Color(0xFFF4F5F7);
   static const Color lightSurface = Color(0xFFFFFFFF);
@@ -82,7 +92,9 @@ class HyperosTheme {
         color: surface,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cardRadius),
+        ),
       ),
       dialogBackgroundColor: surface,
       dividerColor: border,
@@ -131,10 +143,31 @@ class HyperosTheme {
         type: BottomNavigationBarType.fixed,
       ),
       dialogTheme: DialogTheme(
-        elevation: 18,
+        elevation: 0,
         backgroundColor: surface,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        titleTextStyle: TextStyle(
+          color: text,
+          fontSize: 22,
+          height: 1.2,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.3,
+        ),
+        contentTextStyle: TextStyle(color: text, fontSize: 15, height: 1.4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(dialogRadius),
+          side: BorderSide(color: border),
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: surface,
+        modalBackgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        modalElevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -245,6 +278,12 @@ class HyperosTheme {
         elevation: 8,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: accent,
+        circularTrackColor: surfaceMuted,
+        linearTrackColor: surfaceMuted,
+        refreshBackgroundColor: surface,
+      ),
       textTheme: base.textTheme.copyWith(
         headlineSmall: TextStyle(
           color: text,
@@ -306,17 +345,17 @@ class HyperosTheme {
 
   static List<BoxShadow> shadow(BuildContext context) => [
         BoxShadow(
-          color: Colors.black.withOpacity(isDark(context) ? 0.20 : 0.08),
-          blurRadius: 20,
-          offset: const Offset(0, 7),
+          color: Colors.black.withOpacity(isDark(context) ? 0.18 : 0.06),
+          blurRadius: 18,
+          offset: const Offset(0, 6),
         ),
       ];
 
   static List<BoxShadow> capsuleShadow(BuildContext context) => [
         BoxShadow(
-          color: Colors.black.withOpacity(isDark(context) ? 0.34 : 0.12),
-          blurRadius: 40,
-          offset: const Offset(1, 12),
+          color: Colors.black.withOpacity(isDark(context) ? 0.26 : 0.09),
+          blurRadius: 28,
+          offset: const Offset(0, 9),
         ),
       ];
 }
