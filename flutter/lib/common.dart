@@ -30,10 +30,12 @@ import 'package:window_size/window_size.dart' as window_size;
 
 import 'consts.dart';
 import 'common/widgets/overlay.dart';
+import 'mobile/hyperos_theme.dart';
 import 'mobile/pages/file_manager_page.dart';
 import 'mobile/pages/remote_page.dart';
 import 'mobile/pages/view_camera_page.dart';
 import 'mobile/pages/terminal_page.dart';
+import 'mobile/widgets/miuix_widgets.dart';
 import 'desktop/pages/remote_page.dart' as desktop_remote;
 import 'desktop/pages/file_manager_page.dart' as desktop_file_manager;
 import 'desktop/pages/view_camera_page.dart' as desktop_view_camera;
@@ -1081,6 +1083,27 @@ class CustomAlertDialog extends StatelessWidget {
     bool tabTapped = false;
     if (isAndroid) gFFI.invokeMethod("enable_soft_keyboard", true);
 
+    final mobileTitle = title == null
+        ? null
+        : DefaultTextStyle.merge(
+            style: TextStyle(
+              color: HyperosTheme.text(context),
+              fontSize: 22,
+              height: 1.2,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
+            ),
+            child: title!,
+          );
+    final mobileContent = DefaultTextStyle.merge(
+      style: TextStyle(
+        color: HyperosTheme.text(context),
+        fontSize: 15,
+        height: 1.4,
+      ),
+      child: ConstrainedBox(constraints: contentBoxConstraints, child: content),
+    );
+
     return FocusScope(
       node: scopeNode,
       autofocus: true,
@@ -1106,18 +1129,44 @@ class CustomAlertDialog extends StatelessWidget {
         return KeyEventResult.ignored;
       },
       child: AlertDialog(
-          scrollable: true,
-          title: title,
-          content: ConstrainedBox(
-            constraints: contentBoxConstraints,
-            child: content,
-          ),
-          actions: actions,
-          titlePadding: titlePadding ?? MyTheme.dialogTitlePadding(),
-          contentPadding:
-              MyTheme.dialogContentPadding(actions: actions is List),
-          actionsPadding: MyTheme.dialogActionsPadding(),
-          buttonPadding: MyTheme.dialogButtonPadding),
+        scrollable: true,
+        elevation: isMobile ? 0 : null,
+        backgroundColor: isMobile ? HyperosTheme.surface(context) : null,
+        surfaceTintColor: isMobile ? Colors.transparent : null,
+        insetPadding: isMobile
+            ? const EdgeInsets.symmetric(horizontal: 18, vertical: 24)
+            : const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+        shape: isMobile
+            ? RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(HyperosTheme.dialogRadius),
+                side: BorderSide(color: HyperosTheme.border(context)),
+              )
+            : null,
+        title: isMobile ? mobileTitle : title,
+        content: isMobile
+            ? mobileContent
+            : ConstrainedBox(
+                constraints: contentBoxConstraints,
+                child: content,
+              ),
+        actions: actions,
+        titlePadding: isMobile
+            ? titlePadding ?? const EdgeInsets.fromLTRB(20, 20, 20, 10)
+            : titlePadding ?? MyTheme.dialogTitlePadding(),
+        contentPadding: isMobile
+            ? EdgeInsets.fromLTRB(
+                20,
+                title == null ? 20 : 0,
+                20,
+                actions is List ? 10 : 20,
+              )
+            : MyTheme.dialogContentPadding(actions: actions is List),
+        actionsPadding: isMobile
+            ? const EdgeInsets.fromLTRB(12, 0, 12, 12)
+            : MyTheme.dialogActionsPadding(),
+        buttonPadding:
+            isMobile ? EdgeInsets.zero : MyTheme.dialogButtonPadding,
+      ),
     );
   }
 }
@@ -1526,9 +1575,49 @@ class AndroidPermissionManager {
   }
 }
 
-RadioListTile<T> getRadio<T>(
-    Widget title, T toValue, T curValue, ValueChanged<T?>? onChange,
-    {bool? dense}) {
+Widget getRadio<T>(
+  Widget title,
+  T toValue,
+  T curValue,
+  ValueChanged<T?>? onChange, {
+  bool? dense,
+}) {
+  if (isMobile) {
+    final selected = toValue == curValue;
+    return Semantics(
+      selected: selected,
+      inMutuallyExclusiveGroup: true,
+      child: MiuiPreferenceTile(
+        title: title,
+        enabled: onChange != null,
+        minHeight: dense == true ? 48 : 54,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        trailing: Builder(
+          builder: (context) => AnimatedContainer(
+            duration: HyperosTheme.motionStandard,
+            curve: HyperosTheme.motionCurve,
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: selected
+                  ? HyperosTheme.accent
+                  : HyperosTheme.surfaceMuted(context),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: selected
+                    ? HyperosTheme.accent
+                    : HyperosTheme.border(context),
+              ),
+            ),
+            child: selected
+                ? const Icon(Icons.check_rounded, size: 17, color: Colors.white)
+                : null,
+          ),
+        ),
+        onTap: onChange == null ? null : () => onChange(toValue),
+      ),
+    );
+  }
   return RadioListTile<T>(
     visualDensity: VisualDensity.compact,
     controlAffinity: ListTileControlAffinity.trailing,
