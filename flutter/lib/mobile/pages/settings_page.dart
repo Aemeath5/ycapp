@@ -76,6 +76,7 @@ AbstractSettingsSection _buildMiuiSettingsSection(
             enabled: tile.enabled,
             showChevron:
                 !isSwitch && tile.trailing == null && tile.onPressed != null,
+            decorateLeading: tile.leading != null,
           );
         }).toList();
 
@@ -1341,7 +1342,7 @@ void showLanguageSettings(OverlayDialogManager dialogManager) async {
                     lang,
                     isOptFixed ? null : setLang,
                   ),
-                  Divider(color: MyTheme.border),
+                  Divider(color: HyperosTheme.border(context)),
                 ] +
                 langs.map((e) {
                   final key = e[0] as String;
