@@ -39,6 +39,8 @@ class SettingsPage extends StatefulWidget implements PageShape {
 
 const url = 'https://rustdesk.com/';
 
+String _localizedVersion() => '${translate("Version")}: $version';
+
 enum KeepScreenOn { never, duringControlled, serviceOn }
 
 AbstractSettingsSection _buildMiuiSettingsSection(
@@ -407,7 +409,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
                         ),
                         const SizedBox(height: 5),
                         Text(
-                          '${translate("Version: ")}$version',
+                          _localizedVersion(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style:
@@ -1209,7 +1211,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
             onPressed: (context) async {
               await launchUrl(Uri.parse(url));
             },
-            title: Text(translate("Version: ") + version),
+            title: Text(_localizedVersion()),
             value: Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Text(
@@ -1248,7 +1250,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
     ];
     final settings = SettingsList(
       physics: HyperosTheme.springPhysics,
-      contentPadding: const EdgeInsets.only(bottom: 28),
+      contentPadding: const EdgeInsets.only(bottom: 44),
       lightTheme: const SettingsThemeData(
         settingsListBackground: HyperosTheme.lightBackground,
         settingsSectionBackground: Colors.transparent,
@@ -1420,7 +1422,7 @@ void showAbout(OverlayDialogManager dialogManager) {
           direction: Axis.vertical,
           spacing: 12,
           children: [
-            Text('Version: $version'),
+            Text(_localizedVersion()),
             InkWell(
               onTap: () async {
                 const url = 'https://rustdesk.com/';

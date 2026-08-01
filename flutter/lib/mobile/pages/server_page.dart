@@ -153,14 +153,16 @@ class _DropDownAction extends StatelessWidget {
 
   Future<void> _showMenu(BuildContext context) async {
     final entries = _entries();
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
     final value = await showGeneralDialog<String>(
       context: context,
       barrierDismissible: true,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       barrierColor: HyperosTheme.isDark(context)
-          ? const Color(0x66000000)
-          : const Color(0x17000000),
-      transitionDuration: const Duration(milliseconds: 180),
+          ? const Color(0x80000000)
+          : const Color(0x29000000),
+      transitionDuration:
+          reduceMotion ? Duration.zero : const Duration(milliseconds: 180),
       pageBuilder: (dialogContext, _, __) {
         return SafeArea(
           child: Stack(
@@ -174,14 +176,14 @@ class _DropDownAction extends StatelessWidget {
                   alignment: Alignment.topRight,
                   child: SizedBox(
                     width: (MediaQuery.of(dialogContext).size.width * 0.68)
-                        .clamp(224.0, 288.0)
+                        .clamp(232.0, 280.0)
                         .toDouble(),
                     child: Material(
                       type: MaterialType.transparency,
                       child: Container(
                         decoration: BoxDecoration(
                           color: HyperosTheme.surface(dialogContext),
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(22),
                           border: Border.all(
                             color: HyperosTheme.border(dialogContext),
                           ),
@@ -199,14 +201,17 @@ class _DropDownAction extends StatelessWidget {
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: SingleChildScrollView(
+                          physics: HyperosTheme.springPhysics,
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: entries.map((entry) {
                               if (entry.divider) {
                                 return Divider(
-                                  height: 13,
+                                  height: 9,
                                   thickness: 0.7,
+                                  indent: 20,
+                                  endIndent: 20,
                                   color: HyperosTheme.border(dialogContext),
                                 );
                               }
@@ -228,10 +233,10 @@ class _DropDownAction extends StatelessWidget {
                                         )
                                     : null,
                                 contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 15,
+                                  horizontal: 18,
+                                  vertical: 13,
                                 ),
-                                minHeight: 56,
+                                minHeight: 52,
                               );
                             }).toList(),
                           ),
@@ -314,8 +319,11 @@ class _DropDownAction extends StatelessWidget {
       width: 48,
       height: 48,
       child: IconButton(
-        tooltip: '',
-        icon: const Icon(Icons.more_vert_rounded),
+        tooltip: translate('More'),
+        icon: Icon(
+          Icons.more_vert_rounded,
+          color: HyperosTheme.text(context),
+        ),
         onPressed: () => _showMenu(context),
       ),
     );
@@ -397,7 +405,7 @@ class ServiceNotRunningNotification extends StatelessWidget {
           Text(
             translate("android_start_service_tip"),
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13.5,
               height: 1.35,
               color: HyperosTheme.secondaryText(context),
             ),
@@ -421,9 +429,11 @@ class ServiceNotRunningNotification extends StatelessWidget {
 }
 
 class ScamWarningDialog extends StatefulWidget {
-  final ServerModel serverModel;
+  final Future<void> Function() onAgree;
 
-  ScamWarningDialog({required this.serverModel});
+  ScamWarningDialog({
+    required this.onAgree,
+  });
 
   @override
   ScamWarningDialogState createState() => ScamWarningDialogState();
@@ -433,12 +443,10 @@ class ScamWarningDialogState extends State<ScamWarningDialog> {
   int _countdown = bind.isCustomClient() ? 0 : 12;
   bool show_warning = false;
   late Timer _timer;
-  late ServerModel _serverModel;
 
   @override
   void initState() {
     super.initState();
-    _serverModel = widget.serverModel;
     startCountdown();
   }
 
@@ -542,15 +550,15 @@ class ScamWarningDialogState extends State<ScamWarningDialog> {
             child: ElevatedButton(
               onPressed: isButtonLocked
                   ? null
-                  : () {
-                      Navigator.of(context).pop();
-                      _serverModel.toggleService();
+                  : () async {
                       if (show_warning) {
                         bind.mainSetLocalOption(
                           key: "show-scam-warning",
                           value: "N",
                         );
                       }
+                      Navigator.of(context).pop();
+                      await widget.onAgree();
                     },
               child: Text(
                 isButtonLocked
@@ -732,8 +740,12 @@ class _PermissionCheckerState extends State<PermissionChecker> {
               !serverModel.mediaOk &&
                       gFFI.userModel.userName.value.isEmpty &&
                       bind.mainGetLocalOption(key: "show-scam-warning") != "N"
-                  ? () => showScamWarning(context, serverModel)
-                  : serverModel.toggleService,
+                  ? () => showScamWarning(
+                        context,
+                        serverModel,
+                        onAgree: serverModel.toggleScreenCapture,
+                      )
+                  : serverModel.toggleScreenCapture,
             ),
           PermissionRow(
             translate("Input Control"),
@@ -1074,11 +1086,17 @@ void androidChannelInit() {
   });
 }
 
-void showScamWarning(BuildContext context, ServerModel serverModel) {
+void showScamWarning(
+  BuildContext context,
+  ServerModel serverModel, {
+  Future<void> Function()? onAgree,
+}) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      return ScamWarningDialog(serverModel: serverModel);
+      return ScamWarningDialog(
+        onAgree: onAgree ?? serverModel.toggleService,
+      );
     },
   );
 }

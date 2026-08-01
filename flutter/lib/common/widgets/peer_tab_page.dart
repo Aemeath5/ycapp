@@ -612,7 +612,7 @@ class _PeerTabPageState extends State<PeerTabPage>
     final leftActionsSize =
         (leftIconSize + (4 + 4) * 2) * model.visibleEnabledOrderedIndexs.length;
     final availableWidth = screenWidth - 10 * 2 - leftActionsSize - 2 * 2;
-    final searchWidth = 120;
+    final searchWidth = 142;
     final otherActionWidth = 18 + 10;
 
     dropDown(List<Widget> menus) {
@@ -697,9 +697,42 @@ class PeerSearchBar extends StatefulWidget {
 
 class _PeerSearchBarState extends State<PeerSearchBar> {
   var drawer = false;
+  final FocusNode _focusNode = FocusNode();
+  var _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_handleFocusChanged);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_handleFocusChanged);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChanged() {
+    if (!mounted) return;
+    setState(() => _focused = _focusNode.hasFocus);
+    if (_focusNode.hasFocus) {
+      peerSearchTextController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: peerSearchTextController.value.text.length,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final searchIcon = Icon(
+      Icons.search_rounded,
+      color: isMobile
+          ? HyperosTheme.secondaryText(context)
+          : Theme.of(context).hintColor,
+      size: 22,
+    );
     return drawer
         ? _buildSearchBar()
         : _hoverAction(
@@ -711,90 +744,111 @@ class _PeerSearchBarState extends State<PeerSearchBar> {
                 drawer = true;
               });
             },
-            child: Icon(
-              Icons.search_rounded,
-              color: Theme.of(context).hintColor,
-            ));
+            child: isMobile
+                ? Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: HyperosTheme.surfaceMuted(context),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(child: searchIcon),
+                  )
+                : searchIcon,
+          );
   }
 
   Widget _buildSearchBar() {
-    RxBool focused = false.obs;
-    FocusNode focusNode = FocusNode();
-    focusNode.addListener(() {
-      focused.value = focusNode.hasFocus;
-      peerSearchTextController.selection = TextSelection(
-          baseOffset: 0,
-          extentOffset: peerSearchTextController.value.text.length);
-    });
-    return Obx(() => Container(
-          width: stateGlobal.isPortrait.isTrue ? 120 : 140,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.background,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.search_rounded,
-                      color: Theme.of(context).hintColor,
-                    ).marginSymmetric(horizontal: 4),
-                    Expanded(
-                      child: TextField(
-                        autofocus: true,
-                        controller: peerSearchTextController,
-                        onChanged: (searchText) {
-                          peerSearchText.value = searchText;
-                        },
-                        focusNode: focusNode,
-                        textAlign: TextAlign.start,
-                        maxLines: 1,
-                        cursorColor: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.color
-                            ?.withOpacity(0.5),
-                        cursorHeight: 18,
-                        cursorWidth: 1,
-                        style: const TextStyle(fontSize: 14),
-                        decoration: InputDecoration(
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 6),
-                          hintText:
-                              focused.value ? null : translate("Search ID"),
-                          hintStyle: TextStyle(
-                              fontSize: 14, color: Theme.of(context).hintColor),
-                          border: InputBorder.none,
-                          isDense: true,
-                        ),
-                      ).workaroundFreezeLinuxMint(),
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    return AnimatedContainer(
+      duration: reduceMotion ? Duration.zero : HyperosTheme.motionStandard,
+      curve: HyperosTheme.motionCurve,
+      width: isMobile
+          ? (stateGlobal.isPortrait.isTrue ? 142 : 160)
+          : (stateGlobal.isPortrait.isTrue ? 120 : 140),
+      height: isMobile ? 36 : null,
+      decoration: BoxDecoration(
+        color: isMobile
+            ? HyperosTheme.surfaceMuted(context)
+            : Theme.of(context).colorScheme.background,
+        borderRadius: BorderRadius.circular(isMobile ? 14 : 6),
+        border: isMobile
+            ? Border.all(color: HyperosTheme.border(context))
+            : null,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                Icon(
+                  Icons.search_rounded,
+                  color: isMobile
+                      ? HyperosTheme.secondaryText(context)
+                      : Theme.of(context).hintColor,
+                  size: 20,
+                ).marginOnly(left: 9, right: 5),
+                Expanded(
+                  child: TextField(
+                    autofocus: true,
+                    controller: peerSearchTextController,
+                    onChanged: (searchText) {
+                      peerSearchText.value = searchText;
+                    },
+                    focusNode: _focusNode,
+                    textAlign: TextAlign.start,
+                    maxLines: 1,
+                    cursorColor: Theme.of(context).colorScheme.primary,
+                    cursorHeight: 18,
+                    cursorWidth: 1,
+                    style: const TextStyle(fontSize: 14),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(vertical: 6),
+                      hintText: _focused ? null : translate("Search ID"),
+                      hintStyle: TextStyle(
+                        fontSize: 14,
+                        color: isMobile
+                            ? HyperosTheme.secondaryText(context)
+                            : Theme.of(context).hintColor,
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
                     ),
-                    // Icon(Icons.close),
-                    IconButton(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 2),
-                      onPressed: () {
-                        setState(() {
-                          peerSearchTextController.clear();
-                          peerSearchText.value = "";
-                          drawer = false;
-                        });
-                      },
-                      icon: Tooltip(
-                          message: translate('Close'),
-                          child: Icon(
-                            Icons.close,
-                            color: Theme.of(context).hintColor,
-                          )),
-                    ),
-                  ],
+                  ).workaroundFreezeLinuxMint(),
                 ),
-              )
-            ],
-          ),
-        ));
+                IconButton(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.all(0),
+                  constraints: const BoxConstraints.tightFor(
+                    width: 34,
+                    height: 34,
+                  ),
+                  splashRadius: 16,
+                  onPressed: () {
+                    _focusNode.unfocus();
+                    setState(() {
+                      peerSearchTextController.clear();
+                      peerSearchText.value = "";
+                      drawer = false;
+                    });
+                  },
+                  icon: Tooltip(
+                    message: translate('Close'),
+                    child: Icon(
+                      Icons.close_rounded,
+                      color: isMobile
+                          ? HyperosTheme.secondaryText(context)
+                          : Theme.of(context).hintColor,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
   }
 }
 

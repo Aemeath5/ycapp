@@ -388,8 +388,13 @@ class ServerModel with ChangeNotifier {
     return res;
   }
 
-  /// Toggle the screen sharing service.
-  toggleService() async {
+  /// Toggle the screen sharing service and its optional companion features.
+  ///
+  /// Starting the full service may request notification, floating-window and
+  /// file-access permissions. The screen-capture switch must not call this
+  /// method when it only needs Android's MediaProjection consent dialog; use
+  /// [toggleScreenCapture] for that path instead.
+  Future<void> toggleService() async {
     if (_isStart) {
       final res = await parent.target?.dialogManager
           .show<bool>((setState, close, context) {
@@ -411,7 +416,7 @@ class ServerModel with ChangeNotifier {
         );
       });
       if (res == true) {
-        stopService();
+        await stopService();
       }
     } else {
       await checkRequestNotificationPermission();
@@ -441,9 +446,29 @@ class ServerModel with ChangeNotifier {
         );
       });
       if (res == true) {
-        startService();
+        await startService();
       }
     }
+  }
+
+  /// Toggle Android screen capture without requesting unrelated special
+  /// permissions first.
+  ///
+  /// HyperOS opens its app-permission settings page for floating-window and
+  /// all-files-access requests. Screen capture itself only needs the platform
+  /// MediaProjection consent dialog, so keep this route isolated from
+  /// [toggleService]. Other capabilities have their own switches.
+  Future<void> toggleScreenCapture() async {
+    if (_mediaOk) {
+      if (_isStart) {
+        await toggleService();
+      } else {
+        await stopService();
+      }
+      return;
+    }
+
+    await parent.target?.invokeMethod("request_media_projection");
   }
 
   /// Start the screen sharing service.

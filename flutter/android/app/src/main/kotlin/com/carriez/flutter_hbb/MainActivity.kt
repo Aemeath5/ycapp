@@ -140,6 +140,18 @@ class MainActivity : FlutterActivity() {
                     requestMediaProjection()
                     result.success(true)
                 }
+                "request_media_projection" -> {
+                    if (MainService.isReady) {
+                        flutterMethodChannel.invokeMethod(
+                            "on_state_changed",
+                            mapOf("name" to "media", "value" to "true")
+                        )
+                        result.success(false)
+                    } else {
+                        requestMediaProjection()
+                        result.success(true)
+                    }
+                }
                 "start_capture" -> {
                     mainService?.let {
                         result.success(it.startCapture())
