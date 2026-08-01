@@ -10,6 +10,7 @@ import '../../consts.dart';
 import '../../desktop/widgets/tabbar_widget.dart';
 import '../../models/chat_model.dart';
 import '../../models/model.dart';
+import '../../mobile/hyperos_theme.dart';
 import 'chat_page.dart';
 
 class DraggableChatWindow extends StatelessWidget {
@@ -75,7 +76,12 @@ class DraggableChatWindow extends StatelessWidget {
 
   Widget _buildMobileAppBar(BuildContext context) {
     return Container(
-      color: Theme.of(context).colorScheme.primary,
+      decoration: BoxDecoration(
+        color: HyperosTheme.surface(context),
+        border: Border(
+          bottom: BorderSide(color: HyperosTheme.border(context)),
+        ),
+      ),
       height: 50,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -84,11 +90,11 @@ class DraggableChatWindow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 15),
               child: Text(
                 translate("Chat"),
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'WorkSans',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20),
+                style: TextStyle(
+                  color: HyperosTheme.text(context),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                ),
               )),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -98,8 +104,8 @@ class DraggableChatWindow extends StatelessWidget {
                     chatModel.hideChatWindowOverlay();
                   },
                   icon: const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Colors.white,
+                    Icons.keyboard_arrow_down_rounded,
+                    color: HyperosTheme.accent,
                   )),
               IconButton(
                   onPressed: () {
@@ -107,8 +113,8 @@ class DraggableChatWindow extends StatelessWidget {
                     chatModel.hideChatIconOverlay();
                   },
                   icon: const Icon(
-                    Icons.close,
-                    color: Colors.white,
+                    Icons.close_rounded,
+                    color: HyperosTheme.accent,
                   ))
             ],
           )
