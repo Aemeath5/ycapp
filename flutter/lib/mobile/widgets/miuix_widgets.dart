@@ -25,10 +25,84 @@ class MiuiSectionCard extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: HyperosTheme.surface(context),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(HyperosTheme.cardRadius),
       ),
       clipBehavior: Clip.antiAlias,
       child: child,
+    );
+  }
+}
+
+/// Shared HyperOS-style surface for dialogs that use Flutter's route-based
+/// dialog API instead of RustDesk's overlay dialog manager.
+class MiuiDialogPanel extends StatelessWidget {
+  const MiuiDialogPanel({
+    Key? key,
+    required this.title,
+    required this.content,
+    this.icon,
+    this.actions,
+  }) : super(key: key);
+
+  final Widget title;
+  final Widget content;
+  final Widget? icon;
+  final Widget? actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+
+    return Dialog(
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+      backgroundColor: Colors.transparent,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 430,
+          maxHeight: media.size.height * 0.86,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: HyperosTheme.surface(context),
+            borderRadius: BorderRadius.circular(HyperosTheme.dialogRadius),
+            border: Border.all(color: HyperosTheme.border(context)),
+            boxShadow: HyperosTheme.shadow(context),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: SingleChildScrollView(
+            physics: HyperosTheme.springPhysics,
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (icon != null) ...[icon!, const SizedBox(width: 12)],
+                    Expanded(
+                      child: DefaultTextStyle.merge(
+                        style: TextStyle(
+                          color: HyperosTheme.text(context),
+                          fontSize: 22,
+                          height: 1.2,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                        ),
+                        child: title,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                content,
+                if (actions != null) ...[const SizedBox(height: 20), actions!],
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -64,11 +138,8 @@ class MiuiIconContainer extends StatelessWidget {
 
 /// A non-Material switch with the dimensions and motion used by HyperOS.
 class MiuiSwitch extends StatefulWidget {
-  const MiuiSwitch({
-    Key? key,
-    required this.value,
-    this.onChanged,
-  }) : super(key: key);
+  const MiuiSwitch({Key? key, required this.value, this.onChanged})
+      : super(key: key);
 
   final bool value;
   final ValueChanged<bool>? onChanged;
@@ -109,28 +180,30 @@ class _MiuiSwitchState extends State<MiuiSwitch> {
         onTapUp: enabled ? (_) => _setPressed(false) : null,
         onTapCancel: enabled ? () => _setPressed(false) : null,
         child: AnimatedScale(
-          duration: const Duration(milliseconds: 120),
-          curve: Curves.easeOutCubic,
+          duration: HyperosTheme.motionFast,
+          curve: HyperosTheme.motionCurve,
           scale: _pressed ? 0.96 : 1,
           child: SizedBox(
             width: 49,
             height: 28,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
+              duration: HyperosTheme.motionStandard,
+              curve: HyperosTheme.motionCurve,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: (widget.value ? HyperosTheme.accent : offColor)
                     .withOpacity(enabled ? 1 : 0.48),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(
+                  HyperosTheme.controlRadius,
+                ),
               ),
               child: AnimatedAlign(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
+                duration: HyperosTheme.motionStandard,
+                curve: HyperosTheme.motionCurve,
                 alignment:
                     widget.value ? Alignment.centerRight : Alignment.centerLeft,
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 120),
+                  duration: HyperosTheme.motionFast,
                   width: _pressed ? 22 : 20,
                   height: 20,
                   decoration: BoxDecoration(
@@ -200,9 +273,17 @@ class _MiuiPreferenceTileState extends State<MiuiPreferenceTile> {
 
   VoidCallback? get _effectiveTap {
     if (!widget.enabled) return null;
-    if (widget.onTap != null) return widget.onTap;
+    if (widget.onTap != null) {
+      return () {
+        HapticFeedback.selectionClick();
+        widget.onTap!();
+      };
+    }
     if (widget.switchValue != null && widget.onToggle != null) {
-      return () => widget.onToggle!(!widget.switchValue!);
+      return () {
+        HapticFeedback.selectionClick();
+        widget.onToggle!(!widget.switchValue!);
+      };
     }
     return null;
   }
@@ -242,6 +323,7 @@ class _MiuiPreferenceTileState extends State<MiuiPreferenceTile> {
     return Semantics(
       button: action != null,
       enabled: widget.enabled,
+      toggled: widget.switchValue,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: action,
@@ -249,7 +331,7 @@ class _MiuiPreferenceTileState extends State<MiuiPreferenceTile> {
         onTapUp: action == null ? null : (_) => _setPressed(false),
         onTapCancel: action == null ? null : () => _setPressed(false),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
+          duration: HyperosTheme.motionFast,
           color: _pressed
               ? HyperosTheme.accent.withOpacity(
                   HyperosTheme.isDark(context) ? 0.13 : 0.07,
@@ -272,10 +354,7 @@ class _MiuiPreferenceTileState extends State<MiuiPreferenceTile> {
                     SizedBox(
                       width: 28,
                       child: IconTheme.merge(
-                        data: IconThemeData(
-                          color: widget.iconColor,
-                          size: 24,
-                        ),
+                        data: IconThemeData(color: widget.iconColor, size: 24),
                         child: Center(child: widget.leading!),
                       ),
                     ),
@@ -291,7 +370,7 @@ class _MiuiPreferenceTileState extends State<MiuiPreferenceTile> {
                           color: HyperosTheme.text(context),
                           fontSize: 17,
                           height: 1.22,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                         ),
                         child: widget.title,
                       ),
@@ -326,10 +405,7 @@ class _MiuiPreferenceTileState extends State<MiuiPreferenceTile> {
                     ),
                   ),
                 ],
-                if (trailing != null) ...[
-                  const SizedBox(width: 10),
-                  trailing,
-                ],
+                if (trailing != null) ...[const SizedBox(width: 10), trailing],
               ],
             ),
           ),
