@@ -1186,7 +1186,10 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
           !disabledSettings &&
           !outgoingOnly &&
           !hideSecuritySettings)
-        SettingsSection(title: Text('2FA'), tiles: tfaTiles),
+        SettingsSection(
+          title: Text(translate('enter-2fa-title')),
+          tiles: tfaTiles,
+        ),
       if (isAndroid &&
           !disabledSettings &&
           !outgoingOnly &&
@@ -1658,10 +1661,22 @@ class __ManageTrustedDevicesState extends State<_ManageTrustedDevices> {
         future: TrustedDevice.get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return MiuiStatusView(
+              icon: Icons.sync_rounded,
+              title: translate('Loading...'),
+              description: translate('Please wait'),
+              compact: true,
+            );
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return MiuiStatusView(
+              icon: Icons.error_outline_rounded,
+              title: translate('Error'),
+              description: snapshot.error.toString(),
+              color: HyperosTheme.danger,
+              actionLabel: translate('Retry'),
+              onAction: () => setState(() {}),
+            );
           }
           final devices = snapshot.data as List<TrustedDevice>;
           trustedDevices = devices.obs;

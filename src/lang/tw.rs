@@ -744,5 +744,16 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Display Name", "顯示名稱"),
         ("password-hidden-tip", "固定密碼已設定（已隱藏）"),
         ("preset-password-in-use-tip", "目前正在使用預設密碼"),
+        ("Sort", "排序"),
+        ("Scan QR", "掃描 QR Code"),
+        ("Align QR code within frame", "將 QR Code 對準掃描框"),
+        ("Camera permission denied", "未授予相機權限"),
+        ("No QR code found", "圖片中未辨識到 QR Code"),
+        ("Invalid QR code", "無效的 QR Code"),
+        ("Choose from gallery", "從相簿選擇"),
+        ("Toggle flash", "切換閃光燈"),
+        ("Switch camera", "切換相機"),
+        ("Loading...", "正在載入…"),
+        ("Please wait", "請稍候"),
     ].iter().cloned().collect();
 }

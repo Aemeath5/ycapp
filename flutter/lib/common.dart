@@ -1019,25 +1019,45 @@ void showToast(String text,
   final overlayState = globalKey.currentState?.overlay;
   if (overlayState == null) return;
   final entry = OverlayEntry(builder: (context) {
+    final mobile = isMobile;
     return IgnorePointer(
         child: Align(
             alignment: alignment,
-            child: Container(
-              decoration: BoxDecoration(
-                color: MyTheme.color(context).toastBg,
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(20),
-                ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width - 36,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-              child: Text(
-                text,
-                textAlign: TextAlign.center,
-                style: TextStyle(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: mobile
+                      ? (HyperosTheme.isDark(context)
+                          ? const Color(0xF02C2C2E)
+                          : const Color(0xED17181A))
+                      : MyTheme.color(context).toastBg,
+                  borderRadius: BorderRadius.circular(mobile ? 18 : 20),
+                  border: mobile
+                      ? Border.all(color: Colors.white.withOpacity(0.10))
+                      : null,
+                  boxShadow:
+                      mobile ? HyperosTheme.capsuleShadow(context) : null,
+                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: mobile ? 18 : 20,
+                  vertical: mobile ? 11 : 5,
+                ),
+                child: Text(
+                  text,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
                     decoration: TextDecoration.none,
-                    fontWeight: FontWeight.w300,
-                    fontSize: 18,
-                    color: MyTheme.color(context).toastText),
+                    fontWeight: mobile ? FontWeight.w500 : FontWeight.w300,
+                    fontSize: mobile ? 14 : 18,
+                    height: 1.3,
+                    color: mobile
+                        ? Colors.white
+                        : MyTheme.color(context).toastText,
+                  ),
+                ),
               ),
             )));
   });
@@ -1082,6 +1102,9 @@ class CustomAlertDialog extends StatelessWidget {
     });
     bool tabTapped = false;
     if (isAndroid) gFFI.invokeMethod("enable_soft_keyboard", true);
+    final media = MediaQuery.of(context);
+    final compactMobile =
+        isMobile && (media.size.width < 360 || media.size.height < 520);
 
     final mobileTitle = title == null
         ? null
@@ -1134,7 +1157,10 @@ class CustomAlertDialog extends StatelessWidget {
         backgroundColor: isMobile ? HyperosTheme.surface(context) : null,
         surfaceTintColor: isMobile ? Colors.transparent : null,
         insetPadding: isMobile
-            ? const EdgeInsets.symmetric(horizontal: 18, vertical: 24)
+            ? EdgeInsets.symmetric(
+                horizontal: compactMobile ? 10 : 18,
+                vertical: compactMobile ? 12 : 24,
+              )
             : const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
         shape: isMobile
             ? RoundedRectangleBorder(
@@ -1151,13 +1177,19 @@ class CustomAlertDialog extends StatelessWidget {
               ),
         actions: actions,
         titlePadding: isMobile
-            ? titlePadding ?? const EdgeInsets.fromLTRB(20, 20, 20, 10)
+            ? titlePadding ??
+                EdgeInsets.fromLTRB(
+                  compactMobile ? 16 : 20,
+                  compactMobile ? 16 : 20,
+                  compactMobile ? 16 : 20,
+                  10,
+                )
             : titlePadding ?? MyTheme.dialogTitlePadding(),
         contentPadding: isMobile
             ? EdgeInsets.fromLTRB(
-                20,
+                compactMobile ? 16 : 20,
                 title == null ? 20 : 0,
-                20,
+                compactMobile ? 16 : 20,
                 actions is List ? 10 : 20,
               )
             : MyTheme.dialogContentPadding(actions: actions is List),
@@ -3057,11 +3089,32 @@ Widget dialogButton(String text,
             );
     }
   } else {
-    return TextButton(
-      onPressed: onPressed,
-      child: Text(
-        translate(text),
-        style: style,
+    final translated = translate(text);
+    return Builder(
+      builder: (context) => TextButton(
+        style: TextButton.styleFrom(
+          foregroundColor: isOutline
+              ? HyperosTheme.secondaryText(context)
+              : HyperosTheme.accent,
+          backgroundColor: isOutline
+              ? HyperosTheme.surfaceMuted(context)
+              : HyperosTheme.accentSurface(context),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ).merge(buttonStyle),
+        onPressed: onPressed,
+        child: icon == null
+            ? Text(translated, style: style)
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  icon,
+                  const SizedBox(width: 8),
+                  Text(translated, style: style),
+                ],
+              ),
       ),
     );
   }

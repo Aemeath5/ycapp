@@ -3,7 +3,9 @@ import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/models/input_model.dart';
 import 'package:flutter_hbb/models/model.dart';
 import 'package:get/get.dart';
-import 'package:toggle_switch/toggle_switch.dart';
+
+import '../hyperos_theme.dart';
+import 'miuix_widgets.dart';
 
 class GestureIcons {
   static const String _family = 'gestureicons';
@@ -55,14 +57,12 @@ class GestureHelp extends StatefulWidget {
 }
 
 class _GestureHelpState extends State<GestureHelp> {
-  late int _selectedIndex;
   late bool _touchMode;
   final VirtualMouseMode _virtualMouseMode;
 
   _GestureHelpState(bool touchMode, VirtualMouseMode virtualMouseMode)
       : _virtualMouseMode = virtualMouseMode {
     _touchMode = touchMode;
-    _selectedIndex = _touchMode ? 1 : 0;
   }
 
   /// Helper to exit relative mouse mode when certain conditions are met.
@@ -77,6 +77,7 @@ class _GestureHelpState extends State<GestureHelp> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final space = 12.0;
+    final controlsWidth = (size.width - 24).clamp(0.0, 360.0).toDouble();
     var width = size.width - 2 * space;
     final minWidth = 90;
     if (size.width > minWidth + 2 * space) {
@@ -94,60 +95,51 @@ class _GestureHelpState extends State<GestureHelp> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ToggleSwitch(
-                        initialLabelIndex: _selectedIndex,
-                        activeFgColor: Colors.white,
-                        inactiveFgColor: Colors.white60,
-                        activeBgColor: [MyTheme.accent],
-                        inactiveBgColor: Theme.of(context).hintColor,
-                        totalSwitches: 2,
-                        minWidth: 150,
-                        fontSize: 15,
-                        iconSize: 18,
-                        labels: [
-                          translate("Mouse mode"),
-                          translate("Touch mode")
-                        ],
-                        icons: [Icons.mouse, Icons.touch_app],
-                        onToggle: (index) {
+                      SizedBox(
+                        width: controlsWidth,
+                        child: MiuiSegmentedControl<bool>(
+                          value: _touchMode,
+                          items: [
+                            MiuiSegmentedItem(
+                              value: false,
+                              label: translate('Mouse mode'),
+                              icon: Icons.mouse_rounded,
+                            ),
+                            MiuiSegmentedItem(
+                              value: true,
+                              label: translate('Touch mode'),
+                              icon: Icons.touch_app_rounded,
+                            ),
+                          ],
+                          onChanged: (touchMode) {
                           setState(() {
-                            if (_selectedIndex != index) {
-                              _selectedIndex = index ?? 0;
-                              _touchMode = index == 0 ? false : true;
+                            if (_touchMode != touchMode) {
+                              _touchMode = touchMode;
                               widget.onTouchModeChange(_touchMode);
-                              // Exit relative mouse mode when switching to touch mode
                               _exitRelativeMouseModeIf(_touchMode);
                             }
                           });
-                        },
+                          },
+                        ),
                       ),
-                      Transform.translate(
-                        offset: const Offset(-10.0, 0.0),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Checkbox(
-                              value: _virtualMouseMode.showVirtualMouse,
-                              onChanged: (value) async {
-                                if (value == null) return;
-                                await _virtualMouseMode.toggleVirtualMouse();
-                                // Exit relative mouse mode when virtual mouse is hidden
-                                _exitRelativeMouseModeIf(
-                                    !_virtualMouseMode.showVirtualMouse);
-                                setState(() {});
-                              },
-                            ),
-                            InkWell(
-                              onTap: () async {
-                                await _virtualMouseMode.toggleVirtualMouse();
-                                // Exit relative mouse mode when virtual mouse is hidden
-                                _exitRelativeMouseModeIf(
-                                    !_virtualMouseMode.showVirtualMouse);
-                                setState(() {});
-                              },
-                              child: Text(translate('Show virtual mouse')),
-                            ),
-                          ],
+                      SizedBox(
+                        width: controlsWidth,
+                        child: MiuiPreferenceTile(
+                          title: Text(translate('Show virtual mouse')),
+                          leading: const Icon(Icons.mouse_rounded),
+                          switchValue: _virtualMouseMode.showVirtualMouse,
+                          minHeight: 50,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 8,
+                          ),
+                          onToggle: (value) async {
+                            await _virtualMouseMode.toggleVirtualMouse();
+                            _exitRelativeMouseModeIf(
+                              !_virtualMouseMode.showVirtualMouse,
+                            );
+                            setState(() {});
+                          },
                         ),
                       ),
                       if (_touchMode && _virtualMouseMode.showVirtualMouse)
@@ -201,76 +193,53 @@ class _GestureHelpState extends State<GestureHelp> {
                           ),
                         ),
                       if (!_touchMode && _virtualMouseMode.showVirtualMouse)
-                        Transform.translate(
-                          offset: const Offset(-10.0, -12.0),
-                          child: Padding(
-                              // Indent "Show virtual joystick"
-                              padding: const EdgeInsets.only(left: 24.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Checkbox(
-                                    value:
-                                        _virtualMouseMode.showVirtualJoystick,
-                                    onChanged: (value) async {
-                                      if (value == null) return;
-                                      await _virtualMouseMode
-                                          .toggleVirtualJoystick();
-                                      // Exit relative mouse mode when joystick is hidden
-                                      _exitRelativeMouseModeIf(
-                                          !_virtualMouseMode
-                                              .showVirtualJoystick);
-                                      setState(() {});
-                                    },
-                                  ),
-                                  InkWell(
-                                    onTap: () async {
-                                      await _virtualMouseMode
-                                          .toggleVirtualJoystick();
-                                      // Exit relative mouse mode when joystick is hidden
-                                      _exitRelativeMouseModeIf(
-                                          !_virtualMouseMode
-                                              .showVirtualJoystick);
-                                      setState(() {});
-                                    },
-                                    child: Text(
-                                        translate("Show virtual joystick")),
-                                  ),
-                                ],
-                              )),
+                        SizedBox(
+                          width: (controlsWidth - 24)
+                              .clamp(0.0, 336.0)
+                              .toDouble(),
+                          child: MiuiPreferenceTile(
+                            title: Text(translate('Show virtual joystick')),
+                            leading: const Icon(Icons.gamepad_rounded),
+                            switchValue:
+                                _virtualMouseMode.showVirtualJoystick,
+                            minHeight: 48,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 7,
+                            ),
+                            onToggle: (value) async {
+                              await _virtualMouseMode.toggleVirtualJoystick();
+                              _exitRelativeMouseModeIf(
+                                !_virtualMouseMode.showVirtualJoystick,
+                              );
+                              setState(() {});
+                            },
+                          ),
                         ),
                       // Relative mouse mode option - only visible when joystick is shown
                       if (!_touchMode &&
                           _virtualMouseMode.showVirtualMouse &&
                           _virtualMouseMode.showVirtualJoystick &&
                           widget.inputModel != null)
-                        Obx(() => Transform.translate(
-                              offset: const Offset(-10.0, -24.0),
-                              child: Padding(
-                                  // Indent further for 'Relative mouse mode'
-                                  padding: const EdgeInsets.only(left: 48.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Checkbox(
-                                        value: widget.inputModel!
-                                            .relativeMouseMode.value,
-                                        onChanged: (value) {
-                                          if (value == null) return;
-                                          widget.inputModel!
-                                              .setRelativeMouseMode(value);
-                                        },
-                                      ),
-                                      InkWell(
-                                        onTap: () {
-                                          widget.inputModel!
-                                              .toggleRelativeMouseMode();
-                                        },
-                                        child: Text(
-                                            translate('Relative mouse mode')),
-                                      ),
-                                    ],
-                                  )),
+                        Obx(() => SizedBox(
+                              width: (controlsWidth - 48)
+                                  .clamp(0.0, 312.0)
+                                  .toDouble(),
+                              child: MiuiPreferenceTile(
+                                title:
+                                    Text(translate('Relative mouse mode')),
+                                leading:
+                                    const Icon(Icons.center_focus_strong),
+                                switchValue: widget
+                                    .inputModel!.relativeMouseMode.value,
+                                minHeight: 48,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 7,
+                                ),
+                                onToggle: widget.inputModel!
+                                    .setRelativeMouseMode,
+                              ),
                             )),
                     ],
                   ),
@@ -361,18 +330,23 @@ class GestureInfo extends StatelessWidget {
   final double width;
 
   final iconSize = 35.0;
-  final iconColor = MyTheme.accent;
 
   @override
   Widget build(BuildContext context) {
     return Container(
         width: width,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        decoration: BoxDecoration(
+          color: HyperosTheme.surfaceMuted(context),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: HyperosTheme.border(context)),
+        ),
         child: Column(
           children: [
             Icon(
               icon,
               size: iconSize,
-              color: iconColor,
+              color: HyperosTheme.accent,
             ),
             SizedBox(height: 6),
             Text(fromText,

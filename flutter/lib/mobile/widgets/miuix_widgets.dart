@@ -33,6 +33,111 @@ class MiuiSectionCard extends StatelessWidget {
   }
 }
 
+class MiuiSegmentedItem<T> {
+  const MiuiSegmentedItem({
+    required this.value,
+    required this.label,
+    this.icon,
+  });
+
+  final T value;
+  final String label;
+  final IconData? icon;
+}
+
+class MiuiSegmentedControl<T> extends StatelessWidget {
+  const MiuiSegmentedControl({
+    Key? key,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    this.height = 42,
+  }) : super(key: key);
+
+  final T value;
+  final List<MiuiSegmentedItem<T>> items;
+  final ValueChanged<T> onChanged;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: HyperosTheme.surfaceMuted(context),
+        borderRadius: BorderRadius.circular(HyperosTheme.controlRadius),
+        border: Border.all(color: HyperosTheme.border(context)),
+      ),
+      child: Row(
+        children: items.map((item) {
+          final selected = item.value == value;
+          return Expanded(
+            child: Semantics(
+              button: true,
+              selected: selected,
+              label: item.label,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  if (selected) return;
+                  HapticFeedback.selectionClick();
+                  onChanged(item.value);
+                },
+                child: AnimatedContainer(
+                  duration: HyperosTheme.duration(
+                    context,
+                    HyperosTheme.motionStandard,
+                  ),
+                  curve: HyperosTheme.motionCurve,
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? HyperosTheme.surface(context)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(11),
+                    boxShadow: selected ? HyperosTheme.shadow(context) : null,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (item.icon != null) ...[
+                        Icon(
+                          item.icon,
+                          size: 18,
+                          color: selected
+                              ? HyperosTheme.accent
+                              : HyperosTheme.secondaryText(context),
+                        ),
+                        const SizedBox(width: 6),
+                      ],
+                      Flexible(
+                        child: Text(
+                          item.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: selected
+                                ? HyperosTheme.text(context)
+                                : HyperosTheme.secondaryText(context),
+                            fontSize: 14,
+                            fontWeight:
+                                selected ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
 /// Shared HyperOS-style surface for dialogs that use Flutter's route-based
 /// dialog API instead of RustDesk's overlay dialog manager.
 class MiuiDialogPanel extends StatelessWidget {
@@ -180,14 +285,20 @@ class _MiuiSwitchState extends State<MiuiSwitch> {
         onTapUp: enabled ? (_) => _setPressed(false) : null,
         onTapCancel: enabled ? () => _setPressed(false) : null,
         child: AnimatedScale(
-          duration: HyperosTheme.motionFast,
+          duration: HyperosTheme.duration(
+            context,
+            HyperosTheme.motionFast,
+          ),
           curve: HyperosTheme.motionCurve,
           scale: _pressed ? 0.96 : 1,
           child: SizedBox(
             width: 49,
             height: 28,
             child: AnimatedContainer(
-              duration: HyperosTheme.motionStandard,
+              duration: HyperosTheme.duration(
+                context,
+                HyperosTheme.motionStandard,
+              ),
               curve: HyperosTheme.motionCurve,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
@@ -198,12 +309,18 @@ class _MiuiSwitchState extends State<MiuiSwitch> {
                 ),
               ),
               child: AnimatedAlign(
-                duration: HyperosTheme.motionStandard,
+                duration: HyperosTheme.duration(
+                  context,
+                  HyperosTheme.motionStandard,
+                ),
                 curve: HyperosTheme.motionCurve,
                 alignment:
                     widget.value ? Alignment.centerRight : Alignment.centerLeft,
                 child: AnimatedContainer(
-                  duration: HyperosTheme.motionFast,
+                  duration: HyperosTheme.duration(
+                    context,
+                    HyperosTheme.motionFast,
+                  ),
                   width: _pressed ? 22 : 20,
                   height: 20,
                   decoration: BoxDecoration(
@@ -238,7 +355,9 @@ class MiuiPreferenceTile extends StatefulWidget {
     this.switchValue,
     this.onToggle,
     this.onTap,
+    this.onLongPress,
     this.enabled = true,
+    this.selected = false,
     this.showChevron = false,
     this.iconColor = HyperosTheme.accent,
     this.decorateLeading = false,
@@ -257,7 +376,9 @@ class MiuiPreferenceTile extends StatefulWidget {
   final bool? switchValue;
   final ValueChanged<bool>? onToggle;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final bool enabled;
+  final bool selected;
   final bool showChevron;
   final Color iconColor;
   final bool decorateLeading;
@@ -327,16 +448,22 @@ class _MiuiPreferenceTileState extends State<MiuiPreferenceTile> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: action,
+        onLongPress: widget.enabled ? widget.onLongPress : null,
         onTapDown: action == null ? null : (_) => _setPressed(true),
         onTapUp: action == null ? null : (_) => _setPressed(false),
         onTapCancel: action == null ? null : () => _setPressed(false),
         child: AnimatedContainer(
-          duration: HyperosTheme.motionFast,
-          color: _pressed
-              ? HyperosTheme.accent.withOpacity(
-                  HyperosTheme.isDark(context) ? 0.13 : 0.07,
-                )
-              : Colors.transparent,
+          duration: HyperosTheme.duration(
+            context,
+            HyperosTheme.motionFast,
+          ),
+          color: widget.selected
+              ? HyperosTheme.accentSurface(context)
+              : _pressed
+                  ? HyperosTheme.accent.withOpacity(
+                      HyperosTheme.isDark(context) ? 0.13 : 0.07,
+                    )
+                  : Colors.transparent,
           constraints: BoxConstraints(minHeight: widget.minHeight),
           padding: widget.contentPadding,
           child: Opacity(
@@ -409,6 +536,327 @@ class _MiuiPreferenceTileState extends State<MiuiPreferenceTile> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class MiuiCheckBox extends StatelessWidget {
+  const MiuiCheckBox({
+    Key? key,
+    required this.value,
+    this.onChanged,
+    this.size = 24,
+  }) : super(key: key);
+
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onChanged != null;
+    return Semantics(
+      checked: value,
+      enabled: enabled,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: enabled
+            ? () {
+                HapticFeedback.selectionClick();
+                onChanged!(!value);
+              }
+            : null,
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: AnimatedContainer(
+            duration: HyperosTheme.duration(
+              context,
+              HyperosTheme.motionFast,
+            ),
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: value ? HyperosTheme.accent : Colors.transparent,
+              borderRadius: BorderRadius.circular(7),
+              border: Border.all(
+                color: value
+                    ? HyperosTheme.accent
+                    : HyperosTheme.secondaryText(context).withOpacity(0.62),
+                width: 1.6,
+              ),
+            ),
+            child: value
+                ? const Icon(Icons.check_rounded, color: Colors.white, size: 18)
+                : null,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class MiuiRadioTile<T> extends StatelessWidget {
+  const MiuiRadioTile({
+    Key? key,
+    required this.value,
+    required this.groupValue,
+    required this.title,
+    required this.onChanged,
+  }) : super(key: key);
+
+  final T value;
+  final T groupValue;
+  final Widget title;
+  final ValueChanged<T>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = value == groupValue;
+    return MiuiPreferenceTile(
+      title: title,
+      selected: selected,
+      enabled: onChanged != null,
+      onTap: onChanged == null ? null : () => onChanged!(value),
+      trailing: AnimatedContainer(
+        duration: HyperosTheme.duration(
+          context,
+          HyperosTheme.motionFast,
+        ),
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: selected
+                ? HyperosTheme.accent
+                : HyperosTheme.secondaryText(context).withOpacity(0.6),
+            width: selected ? 6 : 1.6,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class MiuiStatusView extends StatelessWidget {
+  const MiuiStatusView({
+    Key? key,
+    required this.icon,
+    required this.title,
+    this.description,
+    this.actionLabel,
+    this.onAction,
+    this.color = HyperosTheme.accent,
+    this.compact = false,
+  }) : super(key: key);
+
+  final IconData icon;
+  final String title;
+  final String? description;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final Color color;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: [title, if (description != null) description!].join('. '),
+      child: Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: compact ? 18 : 36,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              MiuiIconContainer(
+                size: compact ? 48 : 58,
+                color: color,
+                child: Icon(icon),
+              ),
+              SizedBox(height: compact ? 12 : 16),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: HyperosTheme.text(context),
+                  fontSize: compact ? 17 : 19,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (description != null && description!.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  description!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: HyperosTheme.secondaryText(context),
+                    fontSize: 14,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+              if (actionLabel != null && onAction != null) ...[
+                const SizedBox(height: 18),
+                ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class MiuiFloatingControl extends StatelessWidget {
+  const MiuiFloatingControl({
+    Key? key,
+    required this.icon,
+    required this.onPressed,
+    this.tooltip,
+    this.large = false,
+  }) : super(key: key);
+
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final String? tooltip;
+  final bool large;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = large ? 54.0 : 46.0;
+    final control = Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: tooltip,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onPressed == null
+            ? null
+            : () {
+                HapticFeedback.selectionClick();
+                onPressed!();
+              },
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: HyperosTheme.accent,
+            borderRadius: BorderRadius.circular(size * 0.36),
+            boxShadow: HyperosTheme.capsuleShadow(context),
+          ),
+          child: Icon(icon, color: Colors.white, size: large ? 27 : 24),
+        ),
+      ),
+    );
+    return tooltip == null ? control : Tooltip(message: tooltip!, child: control);
+  }
+}
+
+class MiuiActionIconButton extends StatelessWidget {
+  const MiuiActionIconButton({
+    Key? key,
+    required this.icon,
+    required this.onPressed,
+    this.tooltip,
+    this.danger = false,
+  }) : super(key: key);
+
+  final Widget icon;
+  final VoidCallback? onPressed;
+  final String? tooltip;
+  final bool danger;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    final foreground = danger ? HyperosTheme.danger : Colors.white;
+    final child = Semantics(
+      button: true,
+      enabled: enabled,
+      label: tooltip,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: enabled
+            ? () {
+                HapticFeedback.selectionClick();
+                onPressed!();
+              }
+            : null,
+        child: Opacity(
+          opacity: enabled ? 1 : 0.38,
+          child: Container(
+            width: 42,
+            height: 42,
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+            decoration: BoxDecoration(
+              color: danger
+                  ? HyperosTheme.danger.withOpacity(0.18)
+                  : Colors.white.withOpacity(0.10),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: IconTheme.merge(
+              data: IconThemeData(color: foreground, size: 22),
+              child: Center(child: icon),
+            ),
+          ),
+        ),
+      ),
+    );
+    return tooltip == null ? child : Tooltip(message: tooltip!, child: child);
+  }
+}
+
+class MiuiRemoteControlBar extends StatelessWidget {
+  const MiuiRemoteControlBar({
+    Key? key,
+    required this.actions,
+    this.trailing,
+  }) : super(key: key);
+
+  final List<Widget> actions;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 60),
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+        decoration: BoxDecoration(
+          color: const Color(0xEE1C1C1E),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+          border: Border(
+            top: BorderSide(color: Colors.white.withOpacity(0.10)),
+          ),
+          boxShadow: HyperosTheme.capsuleShadow(context),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: HyperosTheme.springPhysics,
+                child: Row(children: actions),
+              ),
+            ),
+            if (trailing != null) ...[
+              Container(
+                width: 1,
+                height: 28,
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+                color: Colors.white.withOpacity(0.14),
+              ),
+              trailing!,
+            ],
+          ],
         ),
       ),
     );

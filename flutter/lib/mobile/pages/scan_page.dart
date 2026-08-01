@@ -9,7 +9,9 @@ import 'package:zxing2/qrcode.dart';
 
 import '../../common.dart';
 import '../../models/platform_model.dart';
+import '../hyperos_theme.dart';
 import '../widgets/dialog.dart';
+import '../widgets/miuix_widgets.dart';
 
 class ScanPage extends StatefulWidget {
   @override
@@ -35,7 +37,7 @@ class _ScanPageState extends State<ScanPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan QR'),
+        title: Text(translate('Scan QR')),
         actions: [
           _buildImagePickerButton(),
           _buildFlashToggleButton(),
@@ -47,21 +49,53 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   Widget _buildQrView(BuildContext context) {
-    var scanArea = MediaQuery.of(context).size.width < 400 ||
-            MediaQuery.of(context).size.height < 400
-        ? 150.0
-        : 300.0;
-    return QRView(
-      key: qrKey,
-      onQRViewCreated: _onQRViewCreated,
-      overlay: QrScannerOverlayShape(
-        borderColor: Colors.red,
-        borderRadius: 10,
-        borderLength: 30,
-        borderWidth: 10,
-        cutOutSize: scanArea,
-      ),
-      onPermissionSet: (ctrl, p) => _onPermissionSet(context, ctrl, p),
+    final media = MediaQuery.of(context);
+    final scanArea = media.size.width < 400 || media.size.height < 500
+        ? 190.0
+        : 286.0;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        QRView(
+          key: qrKey,
+          onQRViewCreated: _onQRViewCreated,
+          overlay: QrScannerOverlayShape(
+            borderColor: HyperosTheme.accent,
+            borderRadius: 24,
+            borderLength: 34,
+            borderWidth: 6,
+            cutOutSize: scanArea,
+            overlayColor: Colors.black.withOpacity(0.62),
+          ),
+          onPermissionSet: (ctrl, p) => _onPermissionSet(context, ctrl, p),
+        ),
+        Positioned(
+          left: 18,
+          right: 18,
+          bottom: media.padding.bottom + 20,
+          child: MiuiSectionCard(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            child: Row(
+              children: [
+                const MiuiIconContainer(
+                  child: Icon(Icons.qr_code_scanner_rounded),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    translate('Align QR code within frame'),
+                    style: TextStyle(
+                      color: HyperosTheme.text(context),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -78,7 +112,7 @@ class _ScanPageState extends State<ScanPage> {
 
   void _onPermissionSet(BuildContext context, QRViewController ctrl, bool p) {
     if (!p) {
-      showToast('No permission');
+      showToast(translate('Camera permission denied'));
     }
   }
 
@@ -103,25 +137,23 @@ class _ScanPageState extends State<ScanPage> {
           showServerSettingFromQr(result.text);
         }
       } catch (e) {
-        showToast('No QR code found');
+        showToast(translate('No QR code found'));
       }
     }
   }
 
   Widget _buildImagePickerButton() {
     return IconButton(
-      color: Colors.white,
-      icon: Icon(Icons.image_search),
-      iconSize: 32.0,
+      tooltip: translate('Choose from gallery'),
+      icon: const Icon(Icons.photo_library_rounded),
       onPressed: _pickImage,
     );
   }
 
   Widget _buildFlashToggleButton() {
     return IconButton(
-      color: Colors.yellow,
-      icon: Icon(Icons.flash_on),
-      iconSize: 32.0,
+      tooltip: translate('Toggle flash'),
+      icon: const Icon(Icons.flash_on_rounded),
       onPressed: () async {
         await controller?.toggleFlash();
       },
@@ -130,9 +162,8 @@ class _ScanPageState extends State<ScanPage> {
 
   Widget _buildCameraSwitchButton() {
     return IconButton(
-      color: Colors.white,
-      icon: Icon(Icons.switch_camera),
-      iconSize: 32.0,
+      tooltip: translate('Switch camera'),
+      icon: const Icon(Icons.cameraswitch_rounded),
       onPressed: () async {
         await controller?.flipCamera();
       },
@@ -150,7 +181,7 @@ class _ScanPageState extends State<ScanPage> {
     closeConnection();
     await controller?.pauseCamera();
     if (!data.startsWith('config=')) {
-      showToast('Invalid QR code');
+      showToast(translate('Invalid QR code'));
       return;
     }
     try {
@@ -159,7 +190,7 @@ class _ScanPageState extends State<ScanPage> {
         showServerSettingsWithValue(sc, gFFI.dialogManager, null);
       });
     } catch (e) {
-      showToast('Invalid QR code');
+      showToast(translate('Invalid QR code'));
     }
   }
 }

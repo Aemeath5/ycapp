@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 
 import '../../common.dart';
 import '../../models/platform_model.dart';
+import 'miuix_widgets.dart';
 
 void _showSuccess() {
   showToast(translate("Successful"));
@@ -36,19 +37,13 @@ void setTemporaryPasswordLengthDialog(
 
     return CustomAlertDialog(
       title: Text(translate("Set one-time password length")),
-      content: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: lengths
-              .map(
-                (value) => Row(
-                  children: [
-                    Text(value),
-                    Radio(
-                        value: value, groupValue: length, onChanged: setLength),
-                  ],
-                ),
-              )
-              .toList()),
+      content: MiuiSegmentedControl<String>(
+        value: length,
+        items: lengths
+            .map((value) => MiuiSegmentedItem(value: value, label: value))
+            .toList(),
+        onChanged: setLength,
+      ),
     );
   }, backDismiss: true, clickMaskDismiss: true);
 }
@@ -150,7 +145,10 @@ void showServerSettingsWithValue(
         ],
       ),
       content: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 500),
+        constraints: BoxConstraints(
+          minWidth: isMobile ? 0 : 500,
+          maxWidth: isMobile ? 430 : double.infinity,
+        ),
         child: Form(
           child: Obx(() => Column(
                 mainAxisSize: MainAxisSize.min,
@@ -221,12 +219,12 @@ void setPrivacyModeDialog(
       content: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: privacyModeList
-              .map((value) => CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
+              .map((value) => MiuiPreferenceTile(
                     title: value.child,
-                    value: value.value,
-                    onChanged: value.onChanged,
+                    switchValue: value.value,
+                    onToggle: value.onChanged == null
+                        ? null
+                        : (enabled) => value.onChanged?.call(enabled),
                   ))
               .toList()),
     );

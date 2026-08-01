@@ -22,8 +22,10 @@ import '../../models/input_model.dart';
 import '../../models/model.dart';
 import '../../models/platform_model.dart';
 import '../../utils/image.dart';
+import '../hyperos_theme.dart';
 import '../widgets/dialog.dart';
 import '../widgets/custom_scale_widget.dart';
+import '../widgets/miuix_widgets.dart';
 
 final initText = '1' * 1024;
 
@@ -366,15 +368,16 @@ class _RemotePageState extends State<RemotePage> with WidgetsBindingObserver {
               : null,
           floatingActionButton: !showActionButton
               ? null
-              : FloatingActionButton(
-                  mini: !keyboardIsVisible,
-                  child: Icon(
+              : MiuiFloatingControl(
+                  large: keyboardIsVisible,
+                  tooltip: translate(
                     (keyboardIsVisible || _showGestureHelp)
-                        ? Icons.expand_more
-                        : Icons.expand_less,
-                    color: Colors.white,
+                        ? 'Hide Toolbar'
+                        : 'Show Toolbar',
                   ),
-                  backgroundColor: MyTheme.accent,
+                  icon: (keyboardIsVisible || _showGestureHelp)
+                      ? Icons.keyboard_arrow_down_rounded
+                      : Icons.keyboard_arrow_up_rounded,
                   onPressed: () {
                     setState(() {
                       if (keyboardIsVisible) {
@@ -461,56 +464,48 @@ class _RemotePageState extends State<RemotePage> with WidgetsBindingObserver {
 
   Widget getBottomAppBar() {
     final ffiModel = Provider.of<FfiModel>(context);
-    return BottomAppBar(
-      elevation: 10,
-      color: MyTheme.accent,
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Row(
-              children: <Widget>[
-                    IconButton(
-                      color: Colors.white,
-                      icon: Icon(Icons.clear),
-                      onPressed: () {
-                        clientClose(sessionId, gFFI);
-                      },
-                    ),
-                    IconButton(
-                      color: Colors.white,
-                      icon: Icon(Icons.tv),
-                      onPressed: () {
-                        setState(() => _showEdit = false);
-                        showOptions(context, widget.id, gFFI.dialogManager);
-                      },
-                    )
-                  ] +
+    return MiuiRemoteControlBar(
+      actions: <Widget>[
+            MiuiActionIconButton(
+              danger: true,
+              tooltip: translate('Close'),
+              icon: const Icon(Icons.close_rounded),
+              onPressed: () => clientClose(sessionId, gFFI),
+            ),
+            MiuiActionIconButton(
+              tooltip: translate('Display Settings'),
+              icon: const Icon(Icons.tune_rounded),
+              onPressed: () {
+                setState(() => _showEdit = false);
+                showOptions(context, widget.id, gFFI.dialogManager);
+              },
+            ),
+          ] +
                   (isWebDesktop || ffiModel.viewOnly || !ffiModel.keyboard
                       ? []
                       : gFFI.ffiModel.isPeerAndroid
                           ? [
-                              IconButton(
-                                  color: Colors.white,
-                                  icon: Icon(Icons.keyboard),
+                              MiuiActionIconButton(
+                                  tooltip: translate('Keyboard Settings'),
+                                  icon: const Icon(Icons.keyboard_rounded),
                                   onPressed: openKeyboard),
-                              IconButton(
-                                color: Colors.white,
+                              MiuiActionIconButton(
+                                tooltip: translate('Mobile Actions'),
                                 icon: const Icon(Icons.build),
                                 onPressed: () => gFFI.dialogManager
                                     .toggleMobileActionsOverlay(ffi: gFFI),
                               )
                             ]
                           : [
-                              IconButton(
-                                  color: Colors.white,
-                                  icon: Icon(Icons.keyboard),
+                              MiuiActionIconButton(
+                                  tooltip: translate('Keyboard Settings'),
+                                  icon: const Icon(Icons.keyboard_rounded),
                                   onPressed: openKeyboard),
-                              IconButton(
-                                color: Colors.white,
+                              MiuiActionIconButton(
+                                tooltip: translate('Control Actions'),
                                 icon: Icon(gFFI.ffiModel.touchMode
-                                    ? Icons.touch_app
-                                    : Icons.mouse),
+                                    ? Icons.touch_app_rounded
+                                    : Icons.mouse_rounded),
                                 onPressed: () => setState(
                                     () => _showGestureHelp = !_showGestureHelp),
                               ),
@@ -521,8 +516,9 @@ class _RemotePageState extends State<RemotePage> with WidgetsBindingObserver {
                           futureBuilder(
                               future: gFFI.invokeMethod(
                                   "get_value", "KEY_IS_SUPPORT_VOICE_CALL"),
-                              hasData: (isSupportVoiceCall) => IconButton(
-                                    color: Colors.white,
+                              hasData: (isSupportVoiceCall) =>
+                                  MiuiActionIconButton(
+                                    tooltip: translate('Text chat'),
                                     icon: isAndroid && isSupportVoiceCall
                                         ? SvgPicture.asset('assets/chat.svg',
                                             colorFilter: ColorFilter.mode(
@@ -535,26 +531,24 @@ class _RemotePageState extends State<RemotePage> with WidgetsBindingObserver {
                                   ))
                         ]) +
                   [
-                    IconButton(
-                      color: Colors.white,
-                      icon: Icon(Icons.more_vert),
+                    MiuiActionIconButton(
+                      tooltip: translate('More'),
+                      icon: const Icon(Icons.more_horiz_rounded),
                       onPressed: () {
                         setState(() => _showEdit = false);
                         showActions(widget.id);
                       },
                     ),
-                  ]),
-          Obx(() => IconButton(
-                color: Colors.white,
-                icon: Icon(Icons.expand_more),
+                  ],
+      trailing: Obx(() => MiuiActionIconButton(
+                tooltip: translate('Hide Toolbar'),
+                icon: const Icon(Icons.keyboard_arrow_down_rounded),
                 onPressed: gFFI.ffiModel.waitForFirstImage.isTrue
                     ? null
                     : () {
                         setState(() => _showBar = !_showBar);
                       },
               )),
-        ],
-      ),
     );
   }
 
@@ -702,7 +696,7 @@ class _RemotePageState extends State<RemotePage> with WidgetsBindingObserver {
         context: context,
         position: RelativeRect.fromLTRB(x, y, x, y),
         items: more,
-        elevation: 8,
+        elevation: 0,
       );
       if (index != null) {
         if (index < mobileActionMenus.length) {
@@ -778,7 +772,7 @@ class _RemotePageState extends State<RemotePage> with WidgetsBindingObserver {
         context: context,
         position: RelativeRect.fromLTRB(x, y, x, y),
         items: menuItems,
-        elevation: 8,
+        elevation: 0,
       );
       if (index != null && index < menus.length) {
         menus[index].onPressed?.call();
@@ -787,21 +781,37 @@ class _RemotePageState extends State<RemotePage> with WidgetsBindingObserver {
   }
 
   /// aka changeTouchMode
-  BottomAppBar getGestureHelp() {
-    return BottomAppBar(
+  Widget getGestureHelp() {
+    return SafeArea(
+      top: false,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.48,
+        ),
+        decoration: BoxDecoration(
+          color: HyperosTheme.surface(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border(
+            top: BorderSide(color: HyperosTheme.border(context)),
+          ),
+          boxShadow: HyperosTheme.capsuleShadow(context),
+        ),
         child: SingleChildScrollView(
-            controller: ScrollController(),
-            padding: EdgeInsets.symmetric(vertical: 10),
-            child: GestureHelp(
-              touchMode: gFFI.ffiModel.touchMode,
-              onTouchModeChange: (t) {
-                gFFI.ffiModel.toggleTouchMode();
-                final v = gFFI.ffiModel.touchMode ? 'Y' : 'N';
-                bind.mainSetLocalOption(key: kOptionTouchMode, value: v);
-              },
-              virtualMouseMode: gFFI.ffiModel.virtualMouseMode,
-              inputModel: gFFI.inputModel,
-            )));
+          physics: HyperosTheme.springPhysics,
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: GestureHelp(
+            touchMode: gFFI.ffiModel.touchMode,
+            onTouchModeChange: (t) {
+              gFFI.ffiModel.toggleTouchMode();
+              final v = gFFI.ffiModel.touchMode ? 'Y' : 'N';
+              bind.mainSetLocalOption(key: kOptionTouchMode, value: v);
+            },
+            virtualMouseMode: gFFI.ffiModel.virtualMouseMode,
+            inputModel: gFFI.inputModel,
+          ),
+        ),
+      ),
+    );
   }
 
   // * Currently mobile does not enable map mode
@@ -1132,34 +1142,50 @@ void showOptions(
   if (pi.displays.length > 1 && pi.currentDisplay != kAllDisplayValue) {
     final cur = pi.currentDisplay;
     final children = <Widget>[];
-    final isDarkTheme = MyTheme.currentThemeMode() == ThemeMode.dark;
-    final numColorSelected = Colors.white;
-    final numColorUnselected = isDarkTheme ? Colors.grey : Colors.black87;
-    // We can't use `Theme.of(context).primaryColor` here, the color is:
-    // - light theme: 0xff2196f3 (Colors.blue)
-    // - dark theme: 0xff212121 (the canvas color?)
-    final numBgSelected =
-        Theme.of(context).colorScheme.primary.withOpacity(0.6);
     for (var i = 0; i < pi.displays.length; ++i) {
-      children.add(InkWell(
+      final selected = i == cur;
+      children.add(Semantics(
+        button: true,
+        selected: selected,
+        child: GestureDetector(
           onTap: () {
-            if (i == cur) return;
+            if (selected) return;
+            HapticFeedback.selectionClick();
             openMonitorInTheSameTab(i, gFFI, pi);
             gFFI.dialogManager.dismissAll();
           },
-          child: Ink(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                  border: Border.all(color: Theme.of(context).hintColor),
-                  borderRadius: BorderRadius.circular(2),
-                  color: i == cur ? numBgSelected : null),
-              child: Center(
-                  child: Text((i + 1).toString(),
-                      style: TextStyle(
-                          color:
-                              i == cur ? numColorSelected : numColorUnselected,
-                          fontWeight: FontWeight.bold))))));
+          child: AnimatedContainer(
+            duration: HyperosTheme.duration(
+              context,
+              HyperosTheme.motionFast,
+            ),
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: selected
+                  ? HyperosTheme.accent
+                  : HyperosTheme.surfaceMuted(context),
+              border: Border.all(
+                color: selected
+                    ? HyperosTheme.accent
+                    : HyperosTheme.border(context),
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Center(
+              child: Text(
+                (i + 1).toString(),
+                style: TextStyle(
+                  color: selected
+                      ? Colors.white
+                      : HyperosTheme.text(context),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ));
     }
     displays.add(Padding(
         padding: const EdgeInsets.only(top: 8),
@@ -1170,7 +1196,7 @@ void showOptions(
         )));
   }
   if (displays.isNotEmpty) {
-    displays.add(const Divider(color: MyTheme.border));
+    displays.add(Divider(color: HyperosTheme.border(context)));
   }
 
   List<TRadioMenu<String>> viewStyleRadios =
@@ -1201,91 +1227,94 @@ void showOptions(
     var codec = (codecRadios.isNotEmpty ? codecRadios[0].groupValue : '').obs;
     final radios = [
       for (var e in viewStyleRadios)
-        Obx(() => getRadio<String>(
-            e.child,
-            e.value,
-            viewStyle.value,
-            e.onChanged != null
-                ? (v) {
-                    e.onChanged?.call(v);
-                    if (v != null) viewStyle.value = v;
-                  }
-                : null)),
+        Obx(() => MiuiRadioTile<String>(
+              title: e.child,
+              value: e.value,
+              groupValue: viewStyle.value,
+              onChanged: e.onChanged == null
+                  ? null
+                  : (v) {
+                      e.onChanged?.call(v);
+                      viewStyle.value = v;
+                    },
+            )),
       // Show custom scale controls when custom view style is selected
       Obx(() => viewStyle.value == kRemoteViewStyleCustom
           ? MobileCustomScaleControls(ffi: gFFI)
           : const SizedBox.shrink()),
-      const Divider(color: MyTheme.border),
+      Divider(color: HyperosTheme.border(context)),
       for (var e in imageQualityRadios)
-        Obx(() => getRadio<String>(
-            e.child,
-            e.value,
-            imageQuality.value,
-            e.onChanged != null
-                ? (v) {
-                    e.onChanged?.call(v);
-                    if (v != null) imageQuality.value = v;
-                  }
-                : null)),
-      const Divider(color: MyTheme.border),
+        Obx(() => MiuiRadioTile<String>(
+              title: e.child,
+              value: e.value,
+              groupValue: imageQuality.value,
+              onChanged: e.onChanged == null
+                  ? null
+                  : (v) {
+                      e.onChanged?.call(v);
+                      imageQuality.value = v;
+                    },
+            )),
+      Divider(color: HyperosTheme.border(context)),
       for (var e in codecRadios)
-        Obx(() => getRadio<String>(
-            e.child,
-            e.value,
-            codec.value,
-            e.onChanged != null
-                ? (v) {
-                    e.onChanged?.call(v);
-                    if (v != null) codec.value = v;
-                  }
-                : null)),
-      if (codecRadios.isNotEmpty) const Divider(color: MyTheme.border),
+        Obx(() => MiuiRadioTile<String>(
+              title: e.child,
+              value: e.value,
+              groupValue: codec.value,
+              onChanged: e.onChanged == null
+                  ? null
+                  : (v) {
+                      e.onChanged?.call(v);
+                      codec.value = v;
+                    },
+            )),
+      if (codecRadios.isNotEmpty)
+        Divider(color: HyperosTheme.border(context)),
     ];
     final rxCursorToggleValues = cursorToggles.map((e) => e.value.obs).toList();
     final cursorTogglesList = cursorToggles
         .asMap()
         .entries
-        .map((e) => Obx(() => CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            value: rxCursorToggleValues[e.key].value,
-            onChanged: e.value.onChanged != null
-                ? (v) {
-                    e.value.onChanged?.call(v);
-                    if (v != null) rxCursorToggleValues[e.key].value = v;
-                  }
-                : null,
-            title: e.value.child)))
+        .map((e) => Obx(() => MiuiPreferenceTile(
+              title: e.value.child,
+              switchValue: rxCursorToggleValues[e.key].value,
+              onToggle: e.value.onChanged == null
+                  ? null
+                  : (v) {
+                      e.value.onChanged?.call(v);
+                      rxCursorToggleValues[e.key].value = v;
+                    },
+            )))
         .toList();
 
     final rxToggleValues = displayToggles.map((e) => e.value.obs).toList();
     final displayTogglesList = displayToggles
         .asMap()
         .entries
-        .map((e) => Obx(() => CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            value: rxToggleValues[e.key].value,
-            onChanged: e.value.onChanged != null
-                ? (v) {
-                    e.value.onChanged?.call(v);
-                    if (v != null) rxToggleValues[e.key].value = v;
-                  }
-                : null,
-            title: e.value.child)))
+        .map((e) => Obx(() => MiuiPreferenceTile(
+              title: e.value.child,
+              switchValue: rxToggleValues[e.key].value,
+              onToggle: e.value.onChanged == null
+                  ? null
+                  : (v) {
+                      e.value.onChanged?.call(v);
+                      rxToggleValues[e.key].value = v;
+                    },
+            )))
         .toList();
     final toggles = [
       ...cursorTogglesList,
-      if (cursorToggles.isNotEmpty) const Divider(color: MyTheme.border),
+      if (cursorToggles.isNotEmpty)
+        Divider(color: HyperosTheme.border(context)),
       ...displayTogglesList,
     ];
 
     Widget privacyModeWidget = Offstage();
     if (privacyModeList.length > 1) {
-      privacyModeWidget = ListTile(
-        contentPadding: EdgeInsets.zero,
-        visualDensity: VisualDensity.compact,
+      privacyModeWidget = MiuiPreferenceTile(
         title: Text(translate('Privacy mode')),
+        leading: const Icon(Icons.privacy_tip_rounded),
+        showChevron: true,
         onTap: () => setPrivacyModeDialog(
             dialogManager, privacyModeList, privacyModeState),
       );
@@ -1294,10 +1323,10 @@ void showOptions(
     var popupDialogMenus = List<Widget>.empty(growable: true);
     final resolution = getResolutionMenu(gFFI, id);
     if (resolution != null) {
-      popupDialogMenus.add(ListTile(
-        contentPadding: EdgeInsets.zero,
-        visualDensity: VisualDensity.compact,
+      popupDialogMenus.add(MiuiPreferenceTile(
         title: resolution.child,
+        leading: const Icon(Icons.aspect_ratio_rounded),
+        showChevron: true,
         onTap: () {
           close();
           resolution.onPressed?.call();
@@ -1306,10 +1335,10 @@ void showOptions(
     }
     final virtualDisplayMenu = getVirtualDisplayMenu(gFFI, id);
     if (virtualDisplayMenu != null) {
-      popupDialogMenus.add(ListTile(
-        contentPadding: EdgeInsets.zero,
-        visualDensity: VisualDensity.compact,
+      popupDialogMenus.add(MiuiPreferenceTile(
         title: virtualDisplayMenu.child,
+        leading: const Icon(Icons.add_to_queue_rounded),
+        showChevron: true,
         onTap: () {
           close();
           virtualDisplayMenu.onPressed?.call();
@@ -1317,10 +1346,11 @@ void showOptions(
       ));
     }
     if (popupDialogMenus.isNotEmpty) {
-      popupDialogMenus.add(const Divider(color: MyTheme.border));
+      popupDialogMenus.add(Divider(color: HyperosTheme.border(context)));
     }
 
     return CustomAlertDialog(
+      title: Text(translate('Display Settings')),
       content: Column(
           mainAxisSize: MainAxisSize.min,
           children: displays +
@@ -1372,11 +1402,11 @@ TTextMenu? getResolutionMenu(FFI ffi, String id) {
     onPressed: () {
       ffi.dialogManager.show((setState, close, context) {
         final children = resolutions
-            .map((e) => getRadio<String>(
-                  Text('${e.width}x${e.height}'),
-                  '${e.width}x${e.height}',
-                  '${display.width}x${display.height}',
-                  (value) {
+            .map((e) => MiuiRadioTile<String>(
+                  title: Text('${e.width}x${e.height}'),
+                  value: '${e.width}x${e.height}',
+                  groupValue: '${display.width}x${display.height}',
+                  onChanged: (value) {
                     close();
                     bind.sessionChangeResolution(
                       sessionId: ffi.sessionId,

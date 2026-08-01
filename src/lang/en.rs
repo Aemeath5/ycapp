@@ -275,5 +275,18 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("keep-awake-during-incoming-sessions-label", "Keep screen awake during incoming sessions"),
         ("password-hidden-tip", "Permanent password is set (hidden)."),
         ("preset-password-in-use-tip", "Preset password is currently in use."),
+        ("More", "More"),
+        ("Parent directory", "Parent directory"),
+        ("Sort", "Sort"),
+        ("Scan QR", "Scan QR code"),
+        ("Align QR code within frame", "Align the QR code within the frame"),
+        ("Camera permission denied", "Camera permission denied"),
+        ("No QR code found", "No QR code found"),
+        ("Invalid QR code", "Invalid QR code"),
+        ("Choose from gallery", "Choose from gallery"),
+        ("Toggle flash", "Toggle flash"),
+        ("Switch camera", "Switch camera"),
+        ("Loading...", "Loading..."),
+        ("Please wait", "Please wait"),
     ].iter().cloned().collect();
 }

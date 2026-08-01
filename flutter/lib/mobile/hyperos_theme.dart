@@ -265,7 +265,13 @@ class HyperosTheme {
       dividerTheme: DividerThemeData(color: border, thickness: 0.5, space: 1),
       popupMenuTheme: PopupMenuThemeData(
         color: surface,
-        elevation: 16,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        textStyle: TextStyle(
+          color: text,
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: border),
@@ -283,6 +289,20 @@ class HyperosTheme {
         circularTrackColor: surfaceMuted,
         linearTrackColor: surfaceMuted,
         refreshBackgroundColor: surface,
+      ),
+      splashFactory: NoSplash.splashFactory,
+      highlightColor: Colors.transparent,
+      hoverColor: accent.withOpacity(isDark ? 0.12 : 0.06),
+      focusColor: accent.withOpacity(isDark ? 0.16 : 0.08),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: _HyperosPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+        },
       ),
       textTheme: base.textTheme.copyWith(
         headlineSmall: TextStyle(
@@ -338,6 +358,30 @@ class HyperosTheme {
   static Color border(BuildContext context) =>
       isDark(context) ? darkBorder : lightBorder;
 
+  static bool reduceMotion(BuildContext context) {
+    final media = MediaQuery.maybeOf(context);
+    return media?.disableAnimations == true ||
+        media?.accessibleNavigation == true;
+  }
+
+  static Duration duration(BuildContext context, Duration normal) =>
+      reduceMotion(context) ? Duration.zero : normal;
+
+  static bool compactLayout(BuildContext context) {
+    final media = MediaQuery.of(context);
+    return media.size.width < 380 || media.size.height < 520;
+  }
+
+  static EdgeInsets pagePadding(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final horizontal = media.size.width >= 720
+        ? 28.0
+        : media.size.width < 360
+            ? 10.0
+            : 16.0;
+    return EdgeInsets.symmetric(horizontal: horizontal, vertical: 12);
+  }
+
   /// Flutter's closest equivalent to MIUIX SpringBackLayout.
   static const ScrollPhysics springPhysics = BouncingScrollPhysics(
     parent: AlwaysScrollableScrollPhysics(),
@@ -358,4 +402,35 @@ class HyperosTheme {
           offset: const Offset(0, 9),
         ),
       ];
+}
+
+class _HyperosPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _HyperosPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (HyperosTheme.reduceMotion(context) || route.isFirst) return child;
+
+    final curved = CurvedAnimation(
+      parent: animation,
+      curve: HyperosTheme.motionCurve,
+      reverseCurve: Curves.easeInCubic,
+    );
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0.025, 0),
+          end: Offset.zero,
+        ).animate(curved),
+        child: child,
+      ),
+    );
+  }
 }

@@ -205,14 +205,15 @@ class DraggableMobileActions extends StatelessWidget {
         builder: (_, onPanUpdate) {
           return GestureDetector(
               onPanUpdate: onPanUpdate,
-              child: Card(
-                  color: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  child: Container(
+              child: Container(
                     decoration: BoxDecoration(
-                        color: MyTheme.accent.withOpacity(0.4),
+                        color: const Color(0xE61C1C1E),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.12),
+                        ),
+                        boxShadow: HyperosTheme.capsuleShadow(context),
                         borderRadius:
-                            BorderRadius.all(Radius.circular(15 * scale))),
+                            BorderRadius.all(Radius.circular(18 * scale))),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -248,7 +249,7 @@ class DraggableMobileActions extends StatelessWidget {
                             iconSize: 24 * scale),
                       ],
                     ),
-                  )));
+                  ));
         });
   }
 }

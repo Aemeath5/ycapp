@@ -20,6 +20,8 @@ import '../../models/input_model.dart';
 import '../../models/model.dart';
 import '../../models/platform_model.dart';
 import '../../utils/image.dart';
+import '../hyperos_theme.dart';
+import '../widgets/miuix_widgets.dart';
 
 final initText = '1' * 1024;
 
@@ -202,15 +204,16 @@ class _ViewCameraPageState extends State<ViewCameraPage>
               : null,
           floatingActionButton: !showActionButton
               ? null
-              : FloatingActionButton(
-                  mini: !keyboardIsVisible,
-                  child: Icon(
+              : MiuiFloatingControl(
+                  large: keyboardIsVisible,
+                  tooltip: translate(
                     (keyboardIsVisible || _showGestureHelp)
-                        ? Icons.expand_more
-                        : Icons.expand_less,
-                    color: Colors.white,
+                        ? 'Hide Toolbar'
+                        : 'Show Toolbar',
                   ),
-                  backgroundColor: MyTheme.accent,
+                  icon: (keyboardIsVisible || _showGestureHelp)
+                      ? Icons.keyboard_arrow_down_rounded
+                      : Icons.keyboard_arrow_up_rounded,
                   onPressed: () {
                     setState(() {
                       if (keyboardIsVisible) {
@@ -292,39 +295,32 @@ class _ViewCameraPageState extends State<ViewCameraPage>
   }
 
   Widget getBottomAppBar() {
-    return BottomAppBar(
-      elevation: 10,
-      color: MyTheme.accent,
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Row(
-              children: <Widget>[
-                    IconButton(
-                      color: Colors.white,
-                      icon: Icon(Icons.clear),
-                      onPressed: () {
-                        clientClose(sessionId, gFFI);
-                      },
-                    ),
-                    IconButton(
-                      color: Colors.white,
-                      icon: Icon(Icons.tv),
-                      onPressed: () {
-                        setState(() => _showEdit = false);
-                        showOptions(context, widget.id, gFFI.dialogManager);
-                      },
-                    )
-                  ] +
+    return MiuiRemoteControlBar(
+      actions: <Widget>[
+            MiuiActionIconButton(
+              danger: true,
+              tooltip: translate('Close'),
+              icon: const Icon(Icons.close_rounded),
+              onPressed: () => clientClose(sessionId, gFFI),
+            ),
+            MiuiActionIconButton(
+              tooltip: translate('Display Settings'),
+              icon: const Icon(Icons.tune_rounded),
+              onPressed: () {
+                setState(() => _showEdit = false);
+                showOptions(context, widget.id, gFFI.dialogManager);
+              },
+            ),
+          ] +
                   (isWeb
                       ? []
                       : <Widget>[
                           futureBuilder(
                               future: gFFI.invokeMethod(
                                   "get_value", "KEY_IS_SUPPORT_VOICE_CALL"),
-                              hasData: (isSupportVoiceCall) => IconButton(
-                                    color: Colors.white,
+                              hasData: (isSupportVoiceCall) =>
+                                  MiuiActionIconButton(
+                                    tooltip: translate('Text chat'),
                                     icon: isAndroid && isSupportVoiceCall
                                         ? SvgPicture.asset('assets/chat.svg',
                                             colorFilter: ColorFilter.mode(
@@ -337,26 +333,24 @@ class _ViewCameraPageState extends State<ViewCameraPage>
                                   ))
                         ]) +
                   [
-                    IconButton(
-                      color: Colors.white,
-                      icon: Icon(Icons.more_vert),
+                    MiuiActionIconButton(
+                      tooltip: translate('More'),
+                      icon: const Icon(Icons.more_horiz_rounded),
                       onPressed: () {
                         setState(() => _showEdit = false);
                         showActions(widget.id);
                       },
                     ),
-                  ]),
-          Obx(() => IconButton(
-                color: Colors.white,
-                icon: Icon(Icons.expand_more),
+                  ],
+      trailing: Obx(() => MiuiActionIconButton(
+                tooltip: translate('Hide Toolbar'),
+                icon: const Icon(Icons.keyboard_arrow_down_rounded),
                 onPressed: gFFI.ffiModel.waitForFirstImage.isTrue
                     ? null
                     : () {
                         setState(() => _showBar = !_showBar);
                       },
               )),
-        ],
-      ),
     );
   }
 
@@ -475,7 +469,7 @@ class _ViewCameraPageState extends State<ViewCameraPage>
         context: context,
         position: RelativeRect.fromLTRB(x, y, x, y),
         items: more,
-        elevation: 8,
+        elevation: 0,
       );
       if (index != null) {
         if (index < mobileActionMenus.length) {
@@ -551,7 +545,7 @@ class _ViewCameraPageState extends State<ViewCameraPage>
         context: context,
         position: RelativeRect.fromLTRB(x, y, x, y),
         items: menuItems,
-        elevation: 8,
+        elevation: 0,
       );
       if (index != null && index < menus.length) {
         menus[index].onPressed?.call();
@@ -585,34 +579,50 @@ void showOptions(
   if (pi.displays.length > 1 && pi.currentDisplay != kAllDisplayValue) {
     final cur = pi.currentDisplay;
     final children = <Widget>[];
-    final isDarkTheme = MyTheme.currentThemeMode() == ThemeMode.dark;
-    final numColorSelected = Colors.white;
-    final numColorUnselected = isDarkTheme ? Colors.grey : Colors.black87;
-    // We can't use `Theme.of(context).primaryColor` here, the color is:
-    // - light theme: 0xff2196f3 (Colors.blue)
-    // - dark theme: 0xff212121 (the canvas color?)
-    final numBgSelected =
-        Theme.of(context).colorScheme.primary.withOpacity(0.6);
     for (var i = 0; i < pi.displays.length; ++i) {
-      children.add(InkWell(
+      final selected = i == cur;
+      children.add(Semantics(
+        button: true,
+        selected: selected,
+        child: GestureDetector(
           onTap: () {
-            if (i == cur) return;
+            if (selected) return;
+            HapticFeedback.selectionClick();
             openMonitorInTheSameTab(i, gFFI, pi);
             gFFI.dialogManager.dismissAll();
           },
-          child: Ink(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                  border: Border.all(color: Theme.of(context).hintColor),
-                  borderRadius: BorderRadius.circular(2),
-                  color: i == cur ? numBgSelected : null),
-              child: Center(
-                  child: Text((i + 1).toString(),
-                      style: TextStyle(
-                          color:
-                              i == cur ? numColorSelected : numColorUnselected,
-                          fontWeight: FontWeight.bold))))));
+          child: AnimatedContainer(
+            duration: HyperosTheme.duration(
+              context,
+              HyperosTheme.motionFast,
+            ),
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: selected
+                  ? HyperosTheme.accent
+                  : HyperosTheme.surfaceMuted(context),
+              border: Border.all(
+                color: selected
+                    ? HyperosTheme.accent
+                    : HyperosTheme.border(context),
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Center(
+              child: Text(
+                (i + 1).toString(),
+                style: TextStyle(
+                  color: selected
+                      ? Colors.white
+                      : HyperosTheme.text(context),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ));
     }
     displays.add(Padding(
         padding: const EdgeInsets.only(top: 8),
@@ -623,7 +633,7 @@ void showOptions(
         )));
   }
   if (displays.isNotEmpty) {
-    displays.add(const Divider(color: MyTheme.border));
+    displays.add(Divider(color: HyperosTheme.border(context)));
   }
 
   List<TRadioMenu<String>> viewStyleRadios =
@@ -643,58 +653,61 @@ void showOptions(
     var codec = (codecRadios.isNotEmpty ? codecRadios[0].groupValue : '').obs;
     final radios = [
       for (var e in viewStyleRadios)
-        Obx(() => getRadio<String>(
-            e.child,
-            e.value,
-            viewStyle.value,
-            e.onChanged != null
-                ? (v) {
-                    e.onChanged?.call(v);
-                    if (v != null) viewStyle.value = v;
-                  }
-                : null)),
-      const Divider(color: MyTheme.border),
+        Obx(() => MiuiRadioTile<String>(
+              title: e.child,
+              value: e.value,
+              groupValue: viewStyle.value,
+              onChanged: e.onChanged == null
+                  ? null
+                  : (v) {
+                      e.onChanged?.call(v);
+                      viewStyle.value = v;
+                    },
+            )),
+      Divider(color: HyperosTheme.border(context)),
       for (var e in imageQualityRadios)
-        Obx(() => getRadio<String>(
-            e.child,
-            e.value,
-            imageQuality.value,
-            e.onChanged != null
-                ? (v) {
-                    e.onChanged?.call(v);
-                    if (v != null) imageQuality.value = v;
-                  }
-                : null)),
-      const Divider(color: MyTheme.border),
+        Obx(() => MiuiRadioTile<String>(
+              title: e.child,
+              value: e.value,
+              groupValue: imageQuality.value,
+              onChanged: e.onChanged == null
+                  ? null
+                  : (v) {
+                      e.onChanged?.call(v);
+                      imageQuality.value = v;
+                    },
+            )),
+      Divider(color: HyperosTheme.border(context)),
       for (var e in codecRadios)
-        Obx(() => getRadio<String>(
-            e.child,
-            e.value,
-            codec.value,
-            e.onChanged != null
-                ? (v) {
-                    e.onChanged?.call(v);
-                    if (v != null) codec.value = v;
-                  }
-                : null)),
-      if (codecRadios.isNotEmpty) const Divider(color: MyTheme.border),
+        Obx(() => MiuiRadioTile<String>(
+              title: e.child,
+              value: e.value,
+              groupValue: codec.value,
+              onChanged: e.onChanged == null
+                  ? null
+                  : (v) {
+                      e.onChanged?.call(v);
+                      codec.value = v;
+                    },
+            )),
+      if (codecRadios.isNotEmpty)
+        Divider(color: HyperosTheme.border(context)),
     ];
 
     final rxToggleValues = displayToggles.map((e) => e.value.obs).toList();
     final displayTogglesList = displayToggles
         .asMap()
         .entries
-        .map((e) => Obx(() => CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            value: rxToggleValues[e.key].value,
-            onChanged: e.value.onChanged != null
-                ? (v) {
-                    e.value.onChanged?.call(v);
-                    if (v != null) rxToggleValues[e.key].value = v;
-                  }
-                : null,
-            title: e.value.child)))
+        .map((e) => Obx(() => MiuiPreferenceTile(
+              title: e.value.child,
+              switchValue: rxToggleValues[e.key].value,
+              onToggle: e.value.onChanged == null
+                  ? null
+                  : (v) {
+                      e.value.onChanged?.call(v);
+                      rxToggleValues[e.key].value = v;
+                    },
+            )))
         .toList();
     final toggles = [
       ...displayTogglesList,
@@ -702,10 +715,11 @@ void showOptions(
 
     var popupDialogMenus = List<Widget>.empty(growable: true);
     if (popupDialogMenus.isNotEmpty) {
-      popupDialogMenus.add(const Divider(color: MyTheme.border));
+      popupDialogMenus.add(Divider(color: HyperosTheme.border(context)));
     }
 
     return CustomAlertDialog(
+      title: Text(translate('Display Settings')),
       content: Column(
           mainAxisSize: MainAxisSize.min,
           children: displays + radios + popupDialogMenus + toggles),

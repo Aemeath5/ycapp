@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_breadcrumb/flutter_breadcrumb.dart';
 import 'package:flutter_hbb/models/file_model.dart';
 import 'package:get/get.dart';
-import 'package:toggle_switch/toggle_switch.dart';
 
 import '../../common.dart';
 import '../../common/widgets/dialog.dart';
+import '../hyperos_theme.dart';
+import '../widgets/miuix_widgets.dart';
 
 class FileManagerPage extends StatefulWidget {
   FileManagerPage(
@@ -73,6 +74,24 @@ class _FileManagerPageState extends State<FileManagerPage> {
   DirectoryOptions get currentOptions => currentFileController.options.value;
   final _uniqueKey = UniqueKey();
 
+  Widget _menuRow(IconData icon, String label, {bool selected = false}) {
+    return Row(
+      children: [
+        MiuiIconContainer(
+          size: 34,
+          child: Icon(selected ? Icons.check_rounded : icon),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            translate(label),
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -101,7 +120,11 @@ class _FileManagerPageState extends State<FileManagerPage> {
   }
 
   @override
-  Widget build(BuildContext context) => WillPopScope(
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final compactTitle = screenWidth < 380;
+    final availableTitleWidth = (screenWidth - 120).clamp(112.0, 220.0);
+    return WillPopScope(
       onWillPop: () async {
         if (selectMode.value != SelectMode.none) {
           selectMode.value = SelectMode.none;
@@ -112,89 +135,61 @@ class _FileManagerPageState extends State<FileManagerPage> {
         return false;
       },
       child: Scaffold(
-        // backgroundColor: MyTheme.grayBg,
         appBar: AppBar(
-          leading: Row(children: [
-            IconButton(
-                icon: Icon(Icons.close),
-                onPressed: () => clientClose(gFFI.sessionId, gFFI)),
-          ]),
+          leading: IconButton(
+            tooltip: translate('Close'),
+            icon: const Icon(Icons.close_rounded),
+            onPressed: () => clientClose(gFFI.sessionId, gFFI),
+          ),
           centerTitle: true,
-          title: ToggleSwitch(
-            initialLabelIndex: showLocal ? 0 : 1,
-            activeBgColor: [MyTheme.idColor],
-            inactiveBgColor: Theme.of(context).brightness == Brightness.light
-                ? MyTheme.grayBg
-                : null,
-            inactiveFgColor: Theme.of(context).brightness == Brightness.light
-                ? Colors.black54
-                : null,
-            totalSwitches: 2,
-            minWidth: 100,
-            fontSize: 15,
-            iconSize: 18,
-            labels: [translate("Local"), translate("Remote")],
-            icons: [Icons.phone_android_sharp, Icons.screen_share],
-            onToggle: (index) {
-              final current = showLocal ? 0 : 1;
-              if (index != current) {
-                setState(() => showLocal = !showLocal);
-              }
-            },
+          title: SizedBox(
+            width: availableTitleWidth.toDouble(),
+            child: MiuiSegmentedControl<bool>(
+              value: showLocal,
+              items: [
+                MiuiSegmentedItem(
+                  value: true,
+                  label: translate('Local'),
+                  icon: compactTitle ? null : Icons.phone_android_rounded,
+                ),
+                MiuiSegmentedItem(
+                  value: false,
+                  label: translate('Remote'),
+                  icon: compactTitle ? null : Icons.desktop_windows_rounded,
+                ),
+              ],
+              onChanged: (value) => setState(() => showLocal = value),
+            ),
           ),
           actions: [
             PopupMenuButton<String>(
-                tooltip: "",
-                icon: Icon(Icons.more_vert),
+                tooltip: translate('More'),
+                icon: const Icon(Icons.more_horiz_rounded),
                 itemBuilder: (context) {
                   return [
                     PopupMenuItem(
-                      child: Row(
-                        children: [
-                          Icon(Icons.refresh,
-                              color: Theme.of(context).iconTheme.color),
-                          SizedBox(width: 5),
-                          Text(translate("Refresh File"))
-                        ],
-                      ),
+                      child: _menuRow(Icons.refresh_rounded, 'Refresh File'),
                       value: "refresh",
                     ),
                     PopupMenuItem(
                       enabled: currentDir.path != "/",
-                      child: Row(
-                        children: [
-                          Icon(Icons.check,
-                              color: Theme.of(context).iconTheme.color),
-                          SizedBox(width: 5),
-                          Text(translate("Multi Select"))
-                        ],
-                      ),
+                      child: _menuRow(Icons.checklist_rounded, 'Multi Select'),
                       value: "select",
                     ),
                     PopupMenuItem(
                       enabled: currentDir.path != "/",
-                      child: Row(
-                        children: [
-                          Icon(Icons.folder_outlined,
-                              color: Theme.of(context).iconTheme.color),
-                          SizedBox(width: 5),
-                          Text(translate("Create Folder"))
-                        ],
+                      child: _menuRow(
+                        Icons.create_new_folder_rounded,
+                        'Create Folder',
                       ),
                       value: "folder",
                     ),
                     PopupMenuItem(
                       enabled: currentDir.path != "/",
-                      child: Row(
-                        children: [
-                          Icon(
-                              currentOptions.showHidden
-                                  ? Icons.check_box_outlined
-                                  : Icons.check_box_outline_blank,
-                              color: Theme.of(context).iconTheme.color),
-                          SizedBox(width: 5),
-                          Text(translate("Show Hidden Files"))
-                        ],
+                      child: _menuRow(
+                        Icons.visibility_rounded,
+                        'Show Hidden Files',
+                        selected: currentOptions.showHidden,
                       ),
                       value: "hidden",
                     )
@@ -264,17 +259,22 @@ class _FileManagerPageState extends State<FileManagerPage> {
                 }),
           ],
         ),
-        body: showLocal
-            ? FileManagerView(
-                controller: model.localController,
-                selectMode: selectMode,
-              )
-            : FileManagerView(
-                controller: model.remoteController,
-                selectMode: selectMode,
-              ),
+        body: SafeArea(
+          top: false,
+          child: showLocal
+              ? FileManagerView(
+                  controller: model.localController,
+                  selectMode: selectMode,
+                )
+              : FileManagerView(
+                  controller: model.remoteController,
+                  selectMode: selectMode,
+                ),
+        ),
         bottomSheet: bottomSheet(),
-      ));
+      ),
+    );
+  }
 
   Widget? bottomSheet() {
     return Obx(() {
@@ -365,6 +365,7 @@ class _FileManagerPageState extends State<FileManagerPage> {
         case JobState.inProgress:
           return BottomSheetBody(
             leading: CircularProgressIndicator(),
+            color: HyperosTheme.warning,
             title: translate("Waiting"),
             text:
                 "${translate("Speed")}:  ${readableFileSize(activeJob.speed)}/s",
@@ -376,6 +377,7 @@ class _FileManagerPageState extends State<FileManagerPage> {
         case JobState.done:
           return BottomSheetBody(
             leading: Icon(Icons.check),
+            color: HyperosTheme.success,
             title: "${translate("Successful")}!",
             text: activeJob.display(),
             onCanceled: () => jobTable.clear(),
@@ -383,6 +385,7 @@ class _FileManagerPageState extends State<FileManagerPage> {
         case JobState.error:
           return BottomSheetBody(
             leading: Icon(Icons.error),
+            color: HyperosTheme.danger,
             title: "${translate("Error")}!",
             text: "",
             onCanceled: () => jobTable.clear(),
@@ -434,6 +437,7 @@ class FileManagerView extends StatefulWidget {
 class _FileManagerViewState extends State<FileManagerView> {
   final _listScrollController = ScrollController();
   final _breadCrumbScroller = ScrollController();
+  StreamSubscription? _directorySubscription;
   late final ascending = Rx<bool>(controller.sortAscending);
 
   bool get isLocal => widget.controller.isLocal;
@@ -443,7 +447,16 @@ class _FileManagerViewState extends State<FileManagerView> {
   @override
   void initState() {
     super.initState();
-    controller.directory.listen((e) => breadCrumbScrollToEnd());
+    _directorySubscription =
+        controller.directory.listen((e) => breadCrumbScrollToEnd());
+  }
+
+  @override
+  void dispose() {
+    _directorySubscription?.cancel();
+    _listScrollController.dispose();
+    _breadCrumbScroller.dispose();
+    super.dispose();
   }
 
   @override
@@ -452,8 +465,20 @@ class _FileManagerViewState extends State<FileManagerView> {
       headTools(),
       Expanded(child: Obx(() {
         final entries = controller.directory.value.entries;
+        if (entries.isEmpty) {
+          return MiuiStatusView(
+            icon: Icons.folder_open_rounded,
+            title: translate('Empty Directory'),
+            description: controller.directory.value.path,
+            actionLabel: translate('Refresh File'),
+            onAction: controller.refresh,
+            compact: HyperosTheme.compactLayout(context),
+          );
+        }
         return ListView.builder(
           controller: _listScrollController,
+          physics: HyperosTheme.springPhysics,
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 104),
           itemCount: entries.length + 1,
           itemBuilder: (context, index) {
             if (index >= entries.length) {
@@ -472,38 +497,43 @@ class _FileManagerViewState extends State<FileManagerView> {
               return widget.selectMode.value != SelectMode.none &&
                   widget.selectMode.value.eq(controller.selectedItems.isLocal);
             }();
-            return Card(
-              child: ListTile(
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: MiuiSectionCard(
+                child: MiuiPreferenceTile(
                 leading: entries[index].isDrive
-                    ? Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        child: Image(
-                            image: iconHardDrive,
-                            fit: BoxFit.scaleDown,
-                            color: Theme.of(context)
-                                .iconTheme
-                                .color
-                                ?.withOpacity(0.7)))
+                    ? Image(
+                        image: iconHardDrive,
+                        width: 24,
+                        height: 24,
+                        fit: BoxFit.scaleDown,
+                        color: HyperosTheme.accent,
+                      )
                     : Icon(
                         entries[index].isFile
-                            ? Icons.feed_outlined
-                            : Icons.folder,
-                        size: 40),
-                title: Text(entries[index].name),
+                            ? Icons.description_rounded
+                            : Icons.folder_rounded,
+                      ),
+                decorateLeading: true,
+                title: Text(
+                  entries[index].name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 selected: selected,
                 subtitle: entries[index].isDrive
                     ? null
                     : Text(
-                        "${entries[index].lastModified().toString().replaceAll(".000", "")}   $sizeStr",
-                        style: TextStyle(fontSize: 12, color: MyTheme.darkGray),
+                        "${entries[index].lastModified().toString().replaceAll(".000", "")}  $sizeStr",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                 trailing: entries[index].isDrive
                     ? null
                     : showCheckBox
-                        ? Checkbox(
+                        ? MiuiCheckBox(
                             value: selected,
                             onChanged: (v) {
-                              if (v == null) return;
                               if (v && !selected) {
                                 _selectedItems.add(entries[index]);
                               } else if (!v && selected) {
@@ -512,12 +542,17 @@ class _FileManagerViewState extends State<FileManagerView> {
                               setState(() {});
                             })
                         : PopupMenuButton<String>(
-                            tooltip: "",
-                            icon: Icon(Icons.more_vert),
+                            tooltip: translate('More'),
+                            icon: const Icon(Icons.more_horiz_rounded),
                             itemBuilder: (context) {
                               return [
                                 PopupMenuItem(
-                                  child: Text(translate("Delete")),
+                                  child: Text(
+                                    translate('Delete'),
+                                    style: const TextStyle(
+                                      color: HyperosTheme.danger,
+                                    ),
+                                  ),
                                   value: "delete",
                                 ),
                                 PopupMenuItem(
@@ -579,6 +614,7 @@ class _FileManagerViewState extends State<FileManagerView> {
                         }
                         setState(() {});
                       },
+                ),
               ),
             );
           },
@@ -588,19 +624,31 @@ class _FileManagerViewState extends State<FileManagerView> {
   }
 
   void breadCrumbScrollToEnd() {
-    Future.delayed(Duration(milliseconds: 200), () {
+    final duration = HyperosTheme.duration(
+      context,
+      const Duration(milliseconds: 200),
+    );
+    Future.delayed(duration, () {
       if (_breadCrumbScroller.hasClients) {
-        _breadCrumbScroller.animateTo(
-            _breadCrumbScroller.position.maxScrollExtent,
-            duration: Duration(milliseconds: 200),
-            curve: Curves.fastLinearToSlowEaseIn);
+        final target = _breadCrumbScroller.position.maxScrollExtent;
+        if (duration == Duration.zero) {
+          _breadCrumbScroller.jumpTo(target);
+        } else {
+          _breadCrumbScroller.animateTo(
+            target,
+            duration: duration,
+            curve: Curves.fastLinearToSlowEaseIn,
+          );
+        }
       }
     });
   }
 
-  Widget headTools() => Container(
-          child: Row(
-        children: [
+  Widget headTools() => MiuiSectionCard(
+        margin: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Row(
+          children: [
           Expanded(child: Obx(() {
             final home = controller.options.value.home;
             final isWindows = controller.options.value.isWindows;
@@ -621,23 +669,28 @@ class _FileManagerViewState extends State<FileManagerView> {
                 }
                 controller.openDirectory(path);
               }),
-              divider: Icon(Icons.chevron_right),
+              divider: Icon(
+                Icons.chevron_right_rounded,
+                color: HyperosTheme.secondaryText(context),
+              ),
               overflow: ScrollableOverflow(controller: _breadCrumbScroller),
             );
           })),
           Row(
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back),
+                tooltip: translate('Back'),
+                icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: controller.goBack,
               ),
               IconButton(
-                icon: Icon(Icons.arrow_upward),
+                tooltip: translate('Parent directory'),
+                icon: const Icon(Icons.arrow_upward_rounded),
                 onPressed: controller.goToParentDirectory,
               ),
               PopupMenuButton<SortBy>(
-                  tooltip: "",
-                  icon: Icon(Icons.sort),
+                  tooltip: translate('Sort'),
+                  icon: const Icon(Icons.sort_rounded),
                   itemBuilder: (context) {
                     return SortBy.values
                         .map((e) => PopupMenuItem(
@@ -659,25 +712,28 @@ class _FileManagerViewState extends State<FileManagerView> {
                   }),
             ],
           )
-        ],
-      ));
+          ],
+        ),
+      );
 
   Widget listTail() => Obx(() => Container(
-        height: 100,
+        height: 92,
         child: Column(
           children: [
             Padding(
               padding: EdgeInsets.fromLTRB(30, 5, 30, 0),
               child: Text(
                 controller.directory.value.path,
-                style: TextStyle(color: MyTheme.darkGray),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: HyperosTheme.secondaryText(context)),
               ),
             ),
             Padding(
               padding: EdgeInsets.all(2),
               child: Text(
-                "${translate("Total")}: ${controller.directory.value.entries.length} ${translate("items")}",
-                style: TextStyle(color: MyTheme.darkGray),
+                "${translate('Total')}: ${controller.directory.value.entries.length} ${translate('items')}",
+                style: TextStyle(color: HyperosTheme.secondaryText(context)),
               ),
             )
           ],
@@ -710,60 +766,77 @@ class BottomSheetBody extends StatelessWidget {
       required this.title,
       required this.text,
       this.onCanceled,
-      this.actions});
+      this.actions,
+      this.color = HyperosTheme.accent});
 
   final Widget leading;
   final String title;
   final String text;
   final VoidCallback? onCanceled;
-  final List<IconButton>? actions;
+  final List<Widget>? actions;
+  final Color color;
 
   @override
-  BottomSheet build(BuildContext context) {
-    // ignore: no_leading_underscores_for_local_identifiers
-    final _actions = actions ?? [];
-    return BottomSheet(
-      builder: (BuildContext context) {
-        return Container(
-            height: 65,
-            alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(
-                color: MyTheme.accent50,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 15),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget build(BuildContext context) {
+    final actionWidgets = <Widget>[
+      ...?actions,
+      IconButton(
+        tooltip: translate('Close'),
+        icon: const Icon(Icons.close_rounded),
+        onPressed: onCanceled,
+      ),
+    ];
+    return SafeArea(
+      top: false,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 76),
+        padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+        decoration: BoxDecoration(
+          color: HyperosTheme.surface(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+          border: Border(
+            top: BorderSide(color: HyperosTheme.border(context)),
+          ),
+          boxShadow: HyperosTheme.capsuleShadow(context),
+        ),
+        child: Row(
+          children: [
+            MiuiIconContainer(color: color, child: leading),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      leading,
-                      SizedBox(width: 16),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(title, style: TextStyle(fontSize: 18)),
-                          Text(text,
-                              style: TextStyle(fontSize: 14)) // TODO color
-                        ],
-                      )
-                    ],
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: HyperosTheme.text(context),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  Row(children: () {
-                    _actions.add(IconButton(
-                      icon: Icon(Icons.cancel_outlined),
-                      onPressed: onCanceled,
-                    ));
-                    return _actions;
-                  }())
+                  if (text.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      text,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: HyperosTheme.secondaryText(context),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
                 ],
               ),
-            ));
-      },
-      onClosing: () {},
-      // backgroundColor: MyTheme.grayBg,
-      enableDrag: false,
+            ),
+            Row(mainAxisSize: MainAxisSize.min, children: actionWidgets),
+          ],
+        ),
+      ),
     );
   }
 }
